@@ -5,23 +5,26 @@ body {
 
 /* Message styles */
 .message {
-    max-width: 85%;
+    max-width: 60%;
+    min-width: 80px;
     padding: 1rem;
     border-radius: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     animation: messageAppear 0.3s ease-out;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    word-break: break-word;
+    /* Optional: add margin-left/right for user/assistant if needed */
 }
 
 .user-message {
-    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    background: #E0E7FF;
     margin-left: auto;
     border-bottom-right-radius: 0.25rem;
     color: #1E40AF;
 }
 
 .assistant-message {
-    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    background: #979DA6;
     margin-right: auto;
     border-bottom-left-radius: 0.25rem;
     color: #334155;
