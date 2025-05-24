@@ -6,80 +6,98 @@ def run_chat_session(
     planner_agent,
     responder_agent,
     sanitizer_agent,
-    save_profile_func
+    save_profile,
+    input_message=None,
+    response_queue=None
 ):
-    import nltk
-    from nltk.tokenize import word_tokenize
-    from utils.text_utils import normalize_list
-
-    chat_history = []
-
-    while True:
-        user_input = input(f"\n{profile['name']}: ")
-        if user_input.lower() in {"exit", "quit"}:
-            print("Goodbye!")
-            break
-
-        # Step 1: Parse query
-        parsed = query_agent.parse_query(user_input)
-        print("\n[Parsed Query]")
-        print(parsed)
-
-        # Step 2: Retrieve relevant memories
-        retrieved = memory_agent.retrieve(
-            query_keywords=parsed["query_keywords"],
-            emotion=parsed["emotion"]
-        )
-
-        # Update vocabulary from user input
-        tokens = word_tokenize(user_input)
-        pos_tags = nltk.pos_tag(tokens)
-        filtered_tokens = [word for word, pos in pos_tags if pos.startswith('NN') or pos.startswith('VB')]
-        new_words = normalize_list(filtered_tokens)
-        updated = False
-        for word in new_words:
-            if word not in profile["known_vocabulary"]:
-                profile["known_vocabulary"].append(word)
-                updated = True
-
-        # Update trigger_words if emotion suggests sensitivity
-        if parsed["emotion"] in {"anxious", "sad", "angry"}:
-            for word in new_words:
-                if word not in profile.get("trigger_words", []):
-                    profile["trigger_words"].append(word)
-                    updated = True
-
-        # Update preferred_topics based on common interest words
-        frequent_topic_keywords = {"books", "games", "videos", "animals", "trains"}
-        for word in new_words:
-            if word in frequent_topic_keywords and word not in profile.get("preferred_topics", []):
-                profile["preferred_topics"].append(word)
-                updated = True
-
-        if updated:
-            save_profile_func(profile, "data/yahya_profile.jsonl")
-            context_agent.update_known_vocabulary(profile.get("known_vocabulary", []))
-
-        print("\n[Memory Scoring Debug Before Context Filter]")
-        for mem in retrieved:
-            print(f"- {mem['text']} (Emotion: {mem['emotion']}, Tags: {mem['tags']})")
-
-        filtered = context_agent.filter(memories=retrieved, query_emotion=parsed["emotion"])
-
-        print("\n[Filtered Memories After Context Filter]")
-        for mem in filtered:
-            print(f"- {mem['text']} (Importance: {mem.get('importance_score', 0)}, Vocab: {mem.get('vocabulary', [])})")
-
-        top_memory = filtered[0]['text'] if filtered else "No specific memory was recalled for this question."
-        dialogue_context = "\n".join(chat_history[-12:])
-        prompt = planner_agent.build_prompt(user_input, top_memory, profile, dialogue_context)
-        print("\n[Generated Prompt for LLM]")
-        print(prompt)
-        response = responder_agent.get_response(prompt)
-        response = sanitizer_agent.sanitize(response)
-
-        print("\nNovah:")
-        print(response)
-
-        chat_history.append(f"{profile['name']}: {user_input}")
-        chat_history.append(f"Bot: {response}")
+    """
+    Run a chat session with the given agents.
+    
+    Args:
+        profile: User profile containing preferences and settings
+        query_agent: Agent for parsing user queries
+        memory_agent: Agent for retrieving relevant memories
+        context_agent: Agent for filtering context
+        planner_agent: Agent for planning responses
+        responder_agent: Agent for generating responses
+        sanitizer_agent: Agent for sanitizing responses
+        save_profile: Function to save profile updates
+        input_message: Optional message for web interface
+        response_queue: Optional queue for web interface communication
+    """
+    try:
+        # Process the input message
+        if input_message:
+            # Parse the query
+            query_result = query_agent.parse_query(input_message)
+            
+            # Retrieve relevant memories
+            memories = memory_agent.retrieve(
+                query_keywords=query_result["query_keywords"],
+                emotion=query_result["emotion"]
+            )
+            
+            # Filter context
+            filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
+            
+            # Get top memory for response
+            top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
+            
+            # Build prompt
+            prompt = planner_agent.build_prompt(input_message, top_memory, profile)
+            
+            # Generate response
+            raw_response = responder_agent.get_response(prompt)
+            
+            # Sanitize response
+            final_response = sanitizer_agent.sanitize(raw_response)
+            
+            # If using web interface, put response in queue
+            if response_queue:
+                response_queue.put(final_response)
+                return
+            
+            return final_response
+            
+        else:
+            # Interactive console mode
+            print("Welcome to NovahSpeaks! Type 'quit' to exit.")
+            while True:
+                user_input = input("You: ").strip()
+                
+                if user_input.lower() == 'quit':
+                    break
+                
+                # Parse the query
+                query_result = query_agent.parse_query(user_input)
+                
+                # Retrieve relevant memories
+                memories = memory_agent.retrieve(
+                    query_keywords=query_result["query_keywords"],
+                    emotion=query_result["emotion"]
+                )
+                
+                # Filter context
+                filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
+                
+                # Get top memory for response
+                top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
+                
+                # Build prompt
+                prompt = planner_agent.build_prompt(user_input, top_memory, profile)
+                
+                # Generate response
+                raw_response = responder_agent.get_response(prompt)
+                
+                # Sanitize response
+                final_response = sanitizer_agent.sanitize(raw_response)
+                
+                print(f"NovahSpeaks: {final_response}")
+                
+    except Exception as e:
+        error_message = f"Error in chat session: {str(e)}"
+        if response_queue:
+            response_queue.put(error_message)
+        else:
+            print(error_message)
+        return error_message

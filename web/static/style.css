@@ -1,0 +1,129 @@
+/* Base styles */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Message styles */
+.message {
+    max-width: 85%;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    animation: messageAppear 0.3s ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.user-message {
+    background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+    margin-left: auto;
+    border-bottom-right-radius: 0.25rem;
+    color: #1E40AF;
+}
+
+.assistant-message {
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    margin-right: auto;
+    border-bottom-left-radius: 0.25rem;
+    color: #334155;
+}
+
+/* Chat container */
+#chat-messages {
+    scrollbar-width: thin;
+    scrollbar-color: #818CF8 #E0E7FF;
+    padding-right: 0.5rem;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #E0E7FF;
+    border-radius: 3px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background-color: #818CF8;
+    border-radius: 3px;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+    border-radius: 1rem;
+    margin-right: auto;
+    width: fit-content;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, #818CF8 0%, #6366F1 100%);
+    border-radius: 50%;
+    animation: typing 1s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes typing {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes messageAppear {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Input focus effects */
+#message-input:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Button hover effects */
+button[type="submit"] {
+    transition: all 0.2s ease-in-out;
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-1px);
+}
+
+button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .message {
+        max-width: 90%;
+    }
+    
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+} 
