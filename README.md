@@ -99,16 +99,3 @@ NovahSpeaks/
 └── README.md        # This file
 ```
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Built with [Autogen](https://github.com/microsoft/autogen) for agent orchestration
-- Uses [FAISS](https://github.com/facebookresearch/faiss) for efficient memory retrieval
-- Powered by [Groq](https://groq.com/) for LLM capabilities
