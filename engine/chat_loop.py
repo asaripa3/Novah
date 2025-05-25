@@ -8,7 +8,8 @@ def run_chat_session(
     sanitizer_agent,
     save_profile,
     input_message=None,
-    response_queue=None
+    response_queue=None,
+    chat_history=None
 ):
     """
     Run a chat session with the given agents.
@@ -24,6 +25,7 @@ def run_chat_session(
         save_profile: Function to save profile updates
         input_message: Optional message for web interface
         response_queue: Optional queue for web interface communication
+        chat_history: List of previous chat messages
     """
     try:
         # Process the input message
@@ -43,8 +45,9 @@ def run_chat_session(
             # Get top memory for response
             top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
             
-            # Build prompt
-            prompt = planner_agent.build_prompt(input_message, top_memory, profile)
+            # Build prompt with chat history
+            dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
+            prompt = planner_agent.build_prompt(input_message, top_memory, profile, dialogue_context)
             
             # Generate response
             raw_response = responder_agent.get_response(prompt)
@@ -62,6 +65,7 @@ def run_chat_session(
         else:
             # Interactive console mode
             print("Welcome to NovahSpeaks! Type 'quit' to exit.")
+            chat_history = []
             while True:
                 user_input = input("You: ").strip()
                 
@@ -83,14 +87,19 @@ def run_chat_session(
                 # Get top memory for response
                 top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
                 
-                # Build prompt
-                prompt = planner_agent.build_prompt(user_input, top_memory, profile)
+                # Build prompt with chat history
+                dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
+                prompt = planner_agent.build_prompt(user_input, top_memory, profile, dialogue_context)
                 
                 # Generate response
                 raw_response = responder_agent.get_response(prompt)
                 
                 # Sanitize response
                 final_response = sanitizer_agent.sanitize(raw_response)
+                
+                # Update chat history
+                chat_history.append(f"User: {user_input}")
+                chat_history.append(f"Assistant: {final_response}")
                 
                 print(f"NovahSpeaks: {final_response}")
                 

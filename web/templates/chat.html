@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovahSpeaks - Chat</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body { background: #051326; min-height: 100vh; height: 100vh; }
+        .main-card { background: #051326; height: 100vh; min-height: 100vh; }
+        .header-bar { background: #061F40; }
+        .send-btn { background: #A4A4A6; }
+        .send-btn:hover { background: #99BF0F; }
+        .accent-border { border-color: #A4A4A6; }
+        .message {
+            max-width: 60%;
+            min-width: 80px;
+            padding: 1rem;
+            border-radius: 1rem;
+            margin-bottom: 1.25rem;
+            animation: messageAppear 0.3s ease-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body class="h-full w-full">
+    <div class="main-card flex flex-col h-full w-full rounded-none shadow-none border-0">
+        <!-- Header -->
+        <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
+            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">NovahSpeaks</h1>
+            <div class="text-white" id="user-name-display"></div>
+        </header>
+
+        <!-- Audio Element (hidden) -->
+        <audio id="speech-audio" style="display: none;"></audio>
+
+        <!-- Chat Area -->
+        <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-8 space-y-6 bg-transparent" style="scroll-behavior: smooth; min-height: 0;">
+            <!-- Welcome Message -->
+            <div class="message assistant-message">
+                <div class="flex items-center space-x-2 mb-1">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span class="text-indigo-600 text-sm font-semibold">N</span>
+                    </div>
+                    <span class="text-sm text-gray-500">NovahSpeaks</span>
+                </div>
+                <p id="welcome-message">Hello! I'm here to help you. How can I assist you today?</p>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t border-[#979DA6] px-6 py-5 bg-gray-800 sticky bottom-0 z-10">
+            <form id="chat-form" class="flex gap-4 items-center">
+                <div class="flex-1 relative">
+                    <input type="text" 
+                           id="message-input" 
+                           class="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
+                           placeholder="Type your message here..."
+                           required autocomplete="off">
+                </div>
+                <button type="submit" 
+                        class="send-btn text-white px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base">
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        // Check if user has a name and emoji stored
+        window.addEventListener('load', function() {
+            const userName = localStorage.getItem('userName');
+            const userEmoji = localStorage.getItem('userEmoji');
+            
+            if (!userName || !userEmoji) {
+                // Redirect to index if no name or emoji is found
+                window.location.href = '/';
+                return;
+            }
+            
+            // Display user's name in header
+            document.getElementById('user-name-display').textContent = `Welcome, ${userName}`;
+            
+            // Update welcome message with user's name
+            const welcomeMessage = document.getElementById('welcome-message');
+            welcomeMessage.textContent = `Hello ${userName}! I'm here to help you. How can I assist you today?`;
+
+            // Store user info in window object for script.js to access
+            window.userInfo = {
+                name: userName,
+                emoji: userEmoji
+            };
+        });
+    </script>
+</body>
+</html> 

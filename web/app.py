@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, session
 from flask_cors import CORS
 import sys
 import os
+from pathlib import Path
+from groq import Groq
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,6 +24,7 @@ import threading
 
 app = Flask(__name__)
 CORS(app)
+app.secret_key = os.urandom(24)  # Required for session
 
 # Load environment variables
 load_dotenv()
@@ -43,7 +46,7 @@ sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary"
 # Create a message queue for communication between threads
 message_queue = queue.Queue()
 
-def process_chat_message(message):
+def process_chat_message(message, chat_history):
     """Process a single chat message and return the response"""
     try:
         # Create a temporary queue for this message
@@ -61,7 +64,8 @@ def process_chat_message(message):
                 sanitizer_agent,
                 save_profile,
                 input_message=message,
-                response_queue=response_queue
+                response_queue=response_queue,
+                chat_history=chat_history
             )
         
         # Start the chat thread
@@ -78,7 +82,14 @@ def process_chat_message(message):
 def home():
     return render_template('index.html')
 
-@app.route('/chat', methods=['POST'])
+@app.route('/chat')
+def chat_page():
+    # Initialize chat history if not exists
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+    return render_template('chat.html')
+
+@app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
     user_message = data.get('message', '')
@@ -87,18 +98,61 @@ def chat():
         return jsonify({'error': 'No message provided'}), 400
     
     try:
-        # Process the message using our chat system
-        response = process_chat_message(user_message)
+        # Get chat history from session
+        chat_history = session.get('chat_history', [])
         
-        return jsonify({
-            'response': response,
-            'status': 'success'
-        })
+        # Process the message using our chat system
+        response = process_chat_message(user_message, chat_history)
+        
+        # Update chat history
+        chat_history.append(f"User: {user_message}")
+        chat_history.append(f"Assistant: {response}")
+        session['chat_history'] = chat_history[-12:]  # Keep last 12 messages
+        
+        # Generate speech for the response
+        client = Groq(api_key=groq_api_key)
+        speech_file_path = os.path.join(PROJECT_ROOT, "web", "static", "speech.wav")
+        
+        try:
+            print(f"Generating speech for response: {response}")
+            speech_response = client.audio.speech.create(
+                model="playai-tts",
+                voice="Jennifer-PlayAI",
+                response_format="wav",
+                input=response
+            )
+            
+            # Use write_to_file method to save the audio
+            speech_response.write_to_file(speech_file_path)
+            print(f"Speech file saved to: {speech_file_path}")
+            
+            return jsonify({
+                'response': response,
+                'status': 'success',
+                'hasAudio': True
+            })
+        except Exception as e:
+            print(f"Speech generation error: {str(e)}")
+            return jsonify({
+                'response': response,
+                'status': 'success',
+                'hasAudio': False
+            })
+            
     except Exception as e:
         return jsonify({
             'error': str(e),
             'status': 'error'
         }), 500
+
+@app.route('/api/speech')
+def get_speech():
+    speech_file_path = Path(__file__).parent / "static" / "speech.wav"
+    print(f"Serving speech file from: {speech_file_path}")
+    if not os.path.exists(speech_file_path):
+        print("Speech file not found!")
+        return jsonify({'error': 'Speech file not found'}), 404
+    return send_file(speech_file_path, mimetype='audio/wav')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

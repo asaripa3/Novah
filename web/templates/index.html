@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovahSpeaks - Your Personal EQ Assistant</title>
+    <title>NovahSpeaks - Welcome</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -12,18 +12,26 @@
         body { background: #051326; min-height: 100vh; height: 100vh; }
         .main-card { background: #051326; height: 100vh; min-height: 100vh; }
         .header-bar { background: #061F40; }
-        .send-btn { background: #A4A4A6; }
-        .send-btn:hover { background: #99BF0F; }
-        .accent-border { border-color: #A4A4A6; }
-        .message {
-            max-width: 60%;
-            min-width: 80px;
-            padding: 1rem;
-            border-radius: 1rem;
-            margin-bottom: 1.25rem;
-            animation: messageAppear 0.3s ease-out;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            word-break: break-word;
+        .next-btn { background: #A4A4A6; }
+        .next-btn:hover { background: #99BF0F; }
+        .profile-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #1E40AF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 4rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .profile-preview:hover {
+            transform: scale(1.05);
+        }
+        .profile-preview:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
@@ -34,37 +42,106 @@
             <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">NovahSpeaks</h1>
         </header>
 
-        <!-- Chat Area -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-8 space-y-6 bg-transparent" style="scroll-behavior: smooth; min-height: 0;">
-            <!-- Welcome Message -->
-            <div class="message assistant-message">
-                <div class="flex items-center space-x-2 mb-1">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <span class="text-indigo-600 text-sm font-semibold">N</span>
-                    </div>
-                    <span class="text-sm text-gray-500">NovahSpeaks</span>
+        <!-- Welcome Section -->
+        <div class="flex-1 flex items-center justify-center px-6">
+            <div class="max-w-md w-full space-y-8">
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-white mb-2">Welcome to NovahSpeaks</h2>
                 </div>
-                <p>Hello! I'm here to help you. How can I assist you today?</p>
+                
+                <form id="welcome-form" class="space-y-6">
+                    <!-- Profile Preview -->
+                    <div class="profile-preview" id="profile-preview">😊</div>
+                    
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Please enter your name</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name"
+                               class="w-full rounded-xl border border-gray-600 bg-gray-700 text-white px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
+                               placeholder="Your name"
+                               required>
+                    </div>
+                    <button type="submit" 
+                            class="next-btn w-full text-white px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base">
+                        Next
+                    </button>
+                </form>
             </div>
         </div>
-
-        <!-- Input Area -->
-        <div class="border-t border-[#979DA6] px-6 py-5 bg-gray-800 sticky bottom-0 z-10">
-            <form id="chat-form" class="flex gap-4 items-center">
-                <div class="flex-1 relative">
-                    <input type="text" 
-                           id="message-input" 
-                           class="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
-                           placeholder="Type your message here..."
-                           required autocomplete="off">
-                </div>
-                <button type="submit" 
-                        class="send-btn text-white px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base">
-                    Send
-                </button>
-            </form>
-        </div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        const emojis = [
+  '😊', // gentle smile
+  '🙂', // soft smile
+  '😌', // content
+  '🤗', // hug
+  '🧸', // teddy bear
+  '💙', // blue heart (safe affection)
+  '💚', // green heart (calm support)
+  '❤️', // love
+  '🧩', // puzzle piece (neurodiversity symbol)
+  '🎨', // creativity
+  '📚', // reading/learning
+  '🎮', // video games
+  '🎵', // music
+  '🎶', // musical notes
+  '🪀', // toy/play
+  '🎲', // board game/dice
+  '🎯', // focus/task
+  '🚗', // car (routine/familiarity)
+  '🚌', // school bus
+  '🍎', // snack/food
+  '🧁', // cupcake (treat)
+  '🍕', // fun food
+  '🌈', // rainbow (visual calm)
+  '☁️', // soft clouds
+  '🌤️', // light sun/clouds
+  '🐢', // slow/calm
+  '🐑', // gentle animal
+  '🪷', // lotus/calmness
+  '🛏️', // rest
+  '📦', // object/familiar item
+  '🧼', // hygiene/safe
+  '🎺', // musical play
+  '🎸', // instrument
+  '🪕', // string instrument
+  '🎭', // expression/feelings
+  '🎪', // fun/circus
+  '🖍️', // coloring
+  '✏️', // writing
+  '🔤', // letters
+  '🖼️'  // pictures/art
+];
+        const profilePreview = document.getElementById('profile-preview');
+        let currentEmoji = '❤️';
+
+        function getRandomEmoji() {
+            let newEmoji;
+            do {
+                newEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            } while (newEmoji === currentEmoji && emojis.length > 1);
+            return newEmoji;
+        }
+
+        profilePreview.addEventListener('click', () => {
+            currentEmoji = getRandomEmoji();
+            profilePreview.textContent = currentEmoji;
+        });
+
+        // Handle form submission
+        document.getElementById('welcome-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            
+            if (name) {
+                // Store the name and emoji in localStorage
+                localStorage.setItem('userName', name);
+                localStorage.setItem('userEmoji', currentEmoji);
+                // Redirect to chat page
+                window.location.href = '/chat';
+            }
+        });
+    </script>
 </body>
 </html> 
