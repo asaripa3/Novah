@@ -16,6 +16,7 @@ from agents.context_filter_agent import ContextFilterAgent
 from agents.response_planner_agent import ResponsePlannerAgent
 from agents.llm_responder_agent import LLMResponderAgent
 from agents.sanitizer_agent import SanitizerAgent
+from agents.psychiatrist_agent import PsychiatristAgent
 from engine.chat_loop import run_chat_session
 import os
 from dotenv import load_dotenv
@@ -42,6 +43,7 @@ context_agent = ContextFilterAgent(known_vocabulary=profile.get("known_vocabular
 planner_agent = ResponsePlannerAgent()
 responder_agent = LLMResponderAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+psychiatrist_agent = PsychiatristAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 
 # Create a message queue for communication between threads
 message_queue = queue.Queue()
@@ -62,6 +64,7 @@ def process_chat_message(message, chat_history):
                 planner_agent,
                 responder_agent,
                 sanitizer_agent,
+                psychiatrist_agent,
                 save_profile,
                 input_message=message,
                 response_queue=response_queue,
@@ -79,7 +82,7 @@ def process_chat_message(message, chat_history):
         return f"Error processing message: {str(e)}"
 
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
 @app.route('/chat')

@@ -6,6 +6,7 @@ from agents.context_filter_agent import ContextFilterAgent
 from agents.response_planner_agent import ResponsePlannerAgent
 from agents.llm_responder_agent import LLMResponderAgent
 from agents.sanitizer_agent import SanitizerAgent
+from agents.psychiatrist_agent import PsychiatristAgent
 from engine.chat_loop import run_chat_session
 import os
 from dotenv import load_dotenv
@@ -21,5 +22,6 @@ context_agent = ContextFilterAgent(known_vocabulary=profile.get("known_vocabular
 planner_agent = ResponsePlannerAgent()
 responder_agent = LLMResponderAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+psychiatrist_agent = PsychiatristAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 
-run_chat_session(profile, query_agent, memory_agent, context_agent, planner_agent, responder_agent, sanitizer_agent, save_profile)
+run_chat_session(profile, query_agent, memory_agent, context_agent, planner_agent, responder_agent, sanitizer_agent, psychiatrist_agent, save_profile)

@@ -6,6 +6,7 @@ def run_chat_session(
     planner_agent,
     responder_agent,
     sanitizer_agent,
+    psychiatrist_agent,
     save_profile,
     input_message=None,
     response_queue=None,
@@ -22,6 +23,7 @@ def run_chat_session(
         planner_agent: Agent for planning responses
         responder_agent: Agent for generating responses
         sanitizer_agent: Agent for sanitizing responses
+        psychiatrist_agent: Agent for emotional analysis and memory processing
         save_profile: Function to save profile updates
         input_message: Optional message for web interface
         response_queue: Optional queue for web interface communication
@@ -32,6 +34,9 @@ def run_chat_session(
         if input_message:
             # Parse the query
             query_result = query_agent.parse_query(input_message)
+            
+            # Process with psychiatrist agent
+            psychiatrist_result = psychiatrist_agent.process_input(input_message, query_result)
             
             # Retrieve relevant memories
             memories = memory_agent.retrieve(
@@ -74,6 +79,9 @@ def run_chat_session(
                 
                 # Parse the query
                 query_result = query_agent.parse_query(user_input)
+                
+                # Process with psychiatrist agent
+                psychiatrist_result = psychiatrist_agent.process_input(user_input, query_result)
                 
                 # Retrieve relevant memories
                 memories = memory_agent.retrieve(
