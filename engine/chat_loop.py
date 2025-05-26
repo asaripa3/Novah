@@ -33,7 +33,7 @@ def run_chat_session(
         # Initialize chat history if not provided
         if chat_history is None:
             chat_history = []
-            
+
         # Process the input message
         if input_message:
             # Parse the query
@@ -46,13 +46,13 @@ def run_chat_session(
             if "profile_updates" in psychiatrist_result:
                 profile.update(psychiatrist_result["profile_updates"])
                 save_profile(profile, "../data/yahya_profile.jsonl")
-            
+
             # Retrieve relevant memories
             memories = memory_agent.retrieve(
                 query_keywords=query_result["query_keywords"],
                 emotion=query_result["emotion"]
             )
-            
+
             # Filter context
             filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
             

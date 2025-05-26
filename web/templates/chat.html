@@ -27,52 +27,89 @@
         </div>
 
         <!-- Header -->
-        <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
-            <a href="/" class="hover:opacity-80 transition-opacity">
-                <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
-            </a>
-            <div class="text-white" id="user-name-display"></div>
+        <header class="header-bar px-8 py-5 flex flex-col items-center justify-between shadow-md sticky top-0 z-10">
+            <div class="w-full flex items-center justify-between">
+                <a href="/" class="hover:opacity-80 transition-opacity">
+                    <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
+                </a>
+                <div class="text-white" id="user-name-display"></div>
+            </div>
+            <!-- Tab Navigation -->
+            <div class="mt-4 flex space-x-1 bg-black bg-opacity-30 rounded-lg p-1">
+                <button id="chat-tab" class="px-4 py-2 rounded-md text-white font-medium transition-all active-tab">
+                    Chat
+                </button>
+                <button id="play-tab" class="px-4 py-2 rounded-md text-white font-medium transition-all">
+                    Play
+                </button>
+            </div>
         </header>
 
         <!-- Audio Element (hidden) -->
         <audio id="speech-audio" style="display: none;"></audio>
 
         <!-- Chat Area -->
-        <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-8 space-y-6 bg-transparent" style="scroll-behavior: smooth; min-height: 0;">
-            <!-- Welcome Message -->
-            <div class="message assistant-message">
-                <div class="flex items-center space-x-2 mb-1">
-                    <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center">
-                        <span class="text-indigo-600 text-sm font-semibold">💗</span>
+        <div id="chat-container" class="flex-1 flex flex-col">
+            <div id="chat-messages" class="flex-1 overflow-y-auto px-6 py-8 space-y-6 bg-transparent" style="scroll-behavior: smooth; min-height: 0;">
+                <!-- Welcome Message -->
+                <div class="message assistant-message">
+                    <div class="flex items-center space-x-2 mb-1">
+                        <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                            <span class="text-indigo-600 text-sm font-semibold">💗</span>
+                        </div>
+                        <span class="text-sm text-white">Novah</span>
                     </div>
-                    <span class="text-sm text-white">Novah</span>
+                    <p id="welcome-message">Hello! I'm here to help you. How can I assist you today?</p>
                 </div>
-                <p id="welcome-message">Hello! I'm here to help you. How can I assist you today?</p>
+            </div>
+
+            <!-- Input Area -->
+            <div id="chat-input" class="px-6 py-5 bg-black sticky bottom-0 z-10">
+                <form id="chat-form" class="flex gap-4 items-center">
+                    <div class="flex-1 relative">
+                        <input type="text" 
+                               id="message-input" 
+                               class="w-full rounded-xl px-4 py-3 transition-all text-base focus:outline-none"
+                               placeholder="Type your message here..."
+                               required autocomplete="off">
+                        <button type="button" 
+                                id="mic-button"
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <button type="submit" 
+                            class="send-btn text-black px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all text-base">
+                        Send
+                    </button>
+                </form>
             </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="px-6 py-5 bg-black sticky bottom-0 z-10">
-            <form id="chat-form" class="flex gap-4 items-center">
-                <div class="flex-1 relative">
-                    <input type="text" 
-                           id="message-input" 
-                           class="w-full rounded-xl px-4 py-3 transition-all text-base focus:outline-none"
-                           placeholder="Type your message here..."
-                           required autocomplete="off">
-                    <button type="button" 
-                            id="mic-button"
-                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                        </svg>
-                    </button>
+        <!-- Play Area (initially hidden) -->
+        <div id="play-container" class="flex-1 hidden flex flex-col items-center justify-center bg-gradient-to-b from-black to-gray-900">
+            <!-- Mascot Container -->
+            <div id="mascot-container" class="relative w-64 h-64 mb-8">
+                <div id="mascot" class="w-full h-full flex items-center justify-center text-8xl transform transition-all duration-300">
+                    🌟
                 </div>
-                <button type="submit" 
-                        class="send-btn text-black px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all text-base">
-                    Send
-                </button>
-            </form>
+                <!-- Speaking Animation (initially hidden) -->
+                <div id="speaking-animation" class="absolute inset-0 hidden">
+                    <div class="wave-circle"></div>
+                    <div class="wave-circle"></div>
+                    <div class="wave-circle"></div>
+                </div>
+            </div>
+            
+            <!-- Mic Button -->
+            <button id="play-mic-button" 
+                    class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center shadow-lg hover:bg-blue-600 transition-all transform hover:scale-105 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+            </button>
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
@@ -101,7 +138,314 @@
                 name: userName,
                 emoji: userEmoji
             };
+
+            // Tab switching functionality
+            const chatTab = document.getElementById('chat-tab');
+            const playTab = document.getElementById('play-tab');
+            const chatContainer = document.getElementById('chat-container');
+            const playContainer = document.getElementById('play-container');
+
+            // Initialize tab states
+            chatContainer.classList.remove('hidden');
+            playContainer.classList.add('hidden');
+            chatTab.classList.add('active-tab');
+            playTab.classList.remove('active-tab');
+
+            function switchToChat() {
+                console.log('Switching to Chat mode');
+                chatTab.classList.add('active-tab');
+                playTab.classList.remove('active-tab');
+                chatContainer.classList.remove('hidden');
+                playContainer.classList.add('hidden');
+            }
+
+            function switchToPlay() {
+                console.log('Switching to Play mode');
+                playTab.classList.add('active-tab');
+                chatTab.classList.remove('active-tab');
+                playContainer.classList.remove('hidden');
+                chatContainer.classList.add('hidden');
+            }
+
+            // Add click event listeners
+            chatTab.addEventListener('click', switchToChat);
+            playTab.addEventListener('click', switchToPlay);
+
+            // Add Play mode animations and speech handling
+            const mascot = document.getElementById('mascot');
+            const speakingAnimation = document.getElementById('speaking-animation');
+            const playMicButton = document.getElementById('play-mic-button');
+            let isRecording = false;
+            let currentAudio = null;
+            let isProcessing = false;
+            let mediaRecorder = null;
+            let stream = null;
+
+            // Function to update mascot emoji
+            function updateMascotEmoji(emoji) {
+                mascot.textContent = emoji;
+            }
+
+            // Function to animate mascot when speaking
+            function animateMascotSpeaking(isSpeaking) {
+                if (isSpeaking) {
+                    mascot.style.transform = 'scale(1.1)';
+                    speakingAnimation.classList.remove('hidden');
+                    updateMascotEmoji('🌟');
+                } else {
+                    mascot.style.transform = 'scale(1)';
+                    speakingAnimation.classList.add('hidden');
+                    updateMascotEmoji('🌟');
+                }
+            }
+
+            // Function to update mic button state
+            function updateMicButtonState() {
+                if (isRecording) {
+                    playMicButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                    playMicButton.disabled = false;
+                } else if (isProcessing) {
+                    playMicButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-red-500', 'hover:bg-red-600');
+                    playMicButton.disabled = true;
+                } else {
+                    playMicButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    playMicButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'bg-gray-500', 'cursor-not-allowed');
+                    playMicButton.disabled = false;
+                }
+            }
+
+            // Function to stop recording
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    console.log('Stopping recording...');
+                    mediaRecorder.stop();
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    isRecording = false;
+                    updateMicButtonState();
+                }
+            }
+
+            // Function to play audio response
+            async function playAudioResponse(response) {
+                isProcessing = true;
+                updateMicButtonState();
+                updateMascotEmoji('🤔'); // Show thinking emoji during processing
+
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
+                try {
+                    // Create new audio element
+                    currentAudio = new Audio('/api/speech');
+                    
+                    // Set up event listeners
+                    currentAudio.onplay = () => {
+                        console.log('Audio started playing');
+                        animateMascotSpeaking(true);
+                    };
+                    
+                    currentAudio.onended = () => {
+                        console.log('Audio finished playing');
+                        animateMascotSpeaking(false);
+                        currentAudio = null;
+                        isProcessing = false;
+                        updateMicButtonState();
+                    };
+                    
+                    currentAudio.onerror = (error) => {
+                        console.error('Error playing audio:', error);
+                        animateMascotSpeaking(false);
+                        currentAudio = null;
+                        isProcessing = false;
+                        updateMicButtonState();
+                    };
+
+                    // Play the audio
+                    await currentAudio.play();
+                } catch (error) {
+                    console.error('Error playing audio response:', error);
+                    animateMascotSpeaking(false);
+                    isProcessing = false;
+                    updateMicButtonState();
+                    updateMascotEmoji('🌟'); // Reset to default emoji on error
+                }
+            }
+
+            // Add click handler for play mode mic button
+            playMicButton.addEventListener('click', async () => {
+                if (isProcessing) {
+                    return; // Don't allow recording while processing
+                }
+
+                if (!isRecording) {
+                    console.log('Starting recording in Play mode...');
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        mediaRecorder = new MediaRecorder(stream, {
+                            mimeType: 'audio/webm',
+                            audioBitsPerSecond: 128000
+                        });
+                        
+                        let audioChunks = [];
+                        
+                        mediaRecorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) {
+                                audioChunks.push(event.data);
+                            }
+                        };
+                        
+                        mediaRecorder.onstop = async () => {
+                            console.log('Play mode recording stopped, processing audio...');
+                            isProcessing = true;
+                            updateMicButtonState();
+                            updateMascotEmoji('🤔'); // Show thinking emoji during processing
+                            
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const formData = new FormData();
+                            formData.append('audio', audioBlob, 'audio.webm');
+                            
+                            try {
+                                // Transcribe the audio
+                                const response = await fetch('/api/transcribe', {
+                                    method: 'POST',
+                                    body: formData
+                                });
+                                
+                                const data = await response.json();
+                                console.log('Play mode transcription:', data);
+                                
+                                if (data.text) {
+                                    // Process through LLM and play response
+                                    const llmResponse = await fetch('/api/chat', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify({
+                                            message: data.text,
+                                            mode: 'play'
+                                        })
+                                    });
+                                    
+                                    const llmData = await llmResponse.json();
+                                    console.log('LLM response in Play mode:', llmData);
+                                    
+                                    if (llmData.response) {
+                                        await playAudioResponse(llmData.response);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error in Play mode processing:', error);
+                                animateMascotSpeaking(false);
+                                isProcessing = false;
+                                updateMicButtonState();
+                                updateMascotEmoji('🌟'); // Reset to default emoji on error
+                            }
+                        };
+                        
+                        mediaRecorder.start();
+                        isRecording = true;
+                        updateMicButtonState();
+
+                        // Auto-stop recording after 10 seconds
+                        setTimeout(() => {
+                            if (isRecording) {
+                                stopRecording();
+                            }
+                        }, 10000);
+                    } catch (error) {
+                        console.error('Error accessing microphone in Play mode:', error);
+                        isProcessing = false;
+                        updateMicButtonState();
+                        updateMascotEmoji('🌟'); // Reset to default emoji on error
+                    }
+                } else {
+                    stopRecording();
+                }
+            });
+
+            // Initialize mic button state and mascot emoji
+            updateMicButtonState();
+            updateMascotEmoji('🌟');
+
+            // Make the speaking animation function globally available
+            window.onLLMSpeaking = function(isSpeaking) {
+                animateMascotSpeaking(isSpeaking);
+            };
         });
     </script>
+    <style>
+        .active-tab {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Speaking animation styles */
+        .wave-circle {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: wave 2s infinite;
+        }
+
+        .wave-circle:nth-child(1) {
+            width: 100%;
+            height: 100%;
+            animation-delay: 0s;
+        }
+
+        .wave-circle:nth-child(2) {
+            width: 120%;
+            height: 120%;
+            left: -10%;
+            top: -10%;
+            animation-delay: 0.3s;
+        }
+
+        .wave-circle:nth-child(3) {
+            width: 140%;
+            height: 140%;
+            left: -20%;
+            top: -20%;
+            animation-delay: 0.6s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Mascot hover effect */
+        #mascot {
+            transition: transform 0.3s ease;
+        }
+
+        #mascot:hover {
+            transform: scale(1.1);
+        }
+
+        /* Ensure containers take full height */
+        #chat-container, #play-container {
+            min-height: calc(100vh - 200px);
+        }
+
+        /* Disabled button styles */
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
 </body>
 </html>
