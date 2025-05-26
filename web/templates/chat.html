@@ -91,9 +91,10 @@
         <!-- Play Area (initially hidden) -->
         <div id="play-container" class="flex-1 hidden flex flex-col items-center justify-center bg-gradient-to-b from-black to-gray-900">
             <!-- Mascot Container -->
-            <div id="mascot-container" class="relative w-64 h-64 mb-8">
-                <div id="mascot" class="w-full h-full flex items-center justify-center text-8xl transform transition-all duration-300">
-                    🌟
+            <div id="mascot-container" class="relative w-96 h-96 mb-8">
+                <div id="mascot" class="w-full h-full flex items-center justify-center transform transition-all duration-300">
+                    <img src="{{ url_for('static', filename='Mascot/idle.png') }}" alt="Mascot" class="w-full h-full object-contain absolute transition-opacity duration-300" id="mascot-current">
+                    <img src="{{ url_for('static', filename='Mascot/idle.png') }}" alt="Mascot" class="w-full h-full object-contain absolute transition-opacity duration-300 opacity-0" id="mascot-next">
                 </div>
                 <!-- Speaking Animation (initially hidden) -->
                 <div id="speaking-animation" class="absolute inset-0 hidden">
@@ -180,57 +181,42 @@
             let isProcessing = false;
             let mediaRecorder = null;
             let stream = null;
+            let talkingAnimationInterval = null;
 
-            // Function to update mascot emoji
+            // Function to update mascot emoji with smooth transition
             function updateMascotEmoji(emoji) {
-                mascot.textContent = emoji;
-            }
-
-            // Function to animate mascot when speaking
-            function animateMascotSpeaking(isSpeaking) {
-                if (isSpeaking) {
-                    mascot.style.transform = 'scale(1.1)';
-                    speakingAnimation.classList.remove('hidden');
-                    updateMascotEmoji('🌟');
-                } else {
-                    mascot.style.transform = 'scale(1)';
-                    speakingAnimation.classList.add('hidden');
-                    updateMascotEmoji('🌟');
+                const currentImg = document.getElementById('mascot-current');
+                const nextImg = document.getElementById('mascot-next');
+                
+                // Set the next image source
+                if (emoji === '🌟') {
+                    nextImg.src = "{{ url_for('static', filename='Mascot/idle.png') }}";
+                } else if (emoji === '🤔') {
+                    nextImg.src = "{{ url_for('static', filename='Mascot/thinking.png') }}";
+                } else if (emoji === '🎤') {
+                    nextImg.src = "{{ url_for('static', filename='Mascot/listening.png') }}";
                 }
-            }
-
-            // Function to update mic button state
-            function updateMicButtonState() {
-                if (isRecording) {
-                    playMicButton.classList.add('bg-red-500', 'hover:bg-red-600');
-                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
-                    playMicButton.disabled = false;
-                } else if (isProcessing) {
-                    playMicButton.classList.add('bg-gray-500', 'cursor-not-allowed');
-                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-red-500', 'hover:bg-red-600');
-                    playMicButton.disabled = true;
-                } else {
-                    playMicButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
-                    playMicButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'bg-gray-500', 'cursor-not-allowed');
-                    playMicButton.disabled = false;
-                }
-            }
-
-            // Function to stop recording
-            function stopRecording() {
-                if (mediaRecorder && isRecording) {
-                    console.log('Stopping recording...');
-                    mediaRecorder.stop();
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
-                    }
-                    isRecording = false;
-                    updateMicButtonState();
-                }
+                
+                // Fade out current image while fading in next image
+                currentImg.style.opacity = '0';
+                nextImg.style.opacity = '1';
+                
+                // After transition, swap the images
+                setTimeout(() => {
+                    // Swap the image sources
+                    const tempSrc = currentImg.src;
+                    currentImg.src = nextImg.src;
+                    nextImg.src = tempSrc;
+                    
+                    // Reset opacities
+                    currentImg.style.opacity = '1';
+                    nextImg.style.opacity = '0';
+                }, 300);
             }
 
             // Function to play audio response
             async function playAudioResponse(response) {
+                console.log('Starting audio response playback...');
                 isProcessing = true;
                 updateMicButtonState();
                 updateMascotEmoji('🤔'); // Show thinking emoji during processing
@@ -267,14 +253,125 @@
                         updateMicButtonState();
                     };
 
+                    // Add loadeddata event to ensure audio is ready
+                    currentAudio.onloadeddata = () => {
+                        console.log('Audio data loaded, starting playback');
+                    };
+
+                    // Add waiting event to handle buffering
+                    currentAudio.onwaiting = () => {
+                        console.log('Audio buffering...');
+                    };
+
+                    // Add canplay event to handle when audio can start playing
+                    currentAudio.oncanplay = () => {
+                        console.log('Audio can play now');
+                    };
+
                     // Play the audio
-                    await currentAudio.play();
+                    try {
+                        console.log('Attempting to play audio...');
+                        await currentAudio.play();
+                        console.log('Audio play() called successfully');
+                    } catch (playError) {
+                        console.error('Error during audio playback:', playError);
+                        animateMascotSpeaking(false);
+                        isProcessing = false;
+                        updateMicButtonState();
+                    }
                 } catch (error) {
-                    console.error('Error playing audio response:', error);
+                    console.error('Error setting up audio:', error);
                     animateMascotSpeaking(false);
                     isProcessing = false;
                     updateMicButtonState();
-                    updateMascotEmoji('🌟'); // Reset to default emoji on error
+                }
+            }
+
+            // Function to animate mascot when speaking
+            function animateMascotSpeaking(isSpeaking) {
+                console.log('Animating mascot speaking:', isSpeaking);
+                if (isSpeaking) {
+                    mascot.style.transform = 'scale(1.15)';
+                    // speakingAnimation.classList.remove('hidden'); // Commented out wave animation
+                    startTalkingAnimation(); // Start the talking animation
+                } else {
+                    mascot.style.transform = 'scale(1)';
+                    // speakingAnimation.classList.add('hidden'); // Commented out wave animation
+                    stopTalkingAnimation(); // Stop the talking animation
+                    updateMascotEmoji('🌟'); // Return to idle state
+                }
+            }
+
+            // Function to start talking animation
+            function startTalkingAnimation() {
+                console.log('Starting talking animation');
+                const currentImg = document.getElementById('mascot-current');
+                const nextImg = document.getElementById('mascot-next');
+                let isTalking1 = true;
+                
+                // Clear any existing interval
+                if (talkingAnimationInterval) {
+                    clearInterval(talkingAnimationInterval);
+                }
+                
+                // Start new animation interval
+                talkingAnimationInterval = setInterval(() => {
+                    // Set the next image
+                    nextImg.src = isTalking1 ? 
+                        "{{ url_for('static', filename='Mascot/talking1.png') }}" : 
+                        "{{ url_for('static', filename='Mascot/talking2.png') }}";
+                    
+                    
+                    // After transition, swap the images
+                    setTimeout(() => {
+                        // Swap the image sources
+                        const tempSrc = currentImg.src;
+                        currentImg.src = nextImg.src;
+                        nextImg.src = tempSrc;
+                        
+                        
+                        isTalking1 = !isTalking1;
+                    }, 150);
+                }, 300);
+            }
+
+            // Function to stop talking animation
+            function stopTalkingAnimation() {
+                console.log('Stopping talking animation');
+                if (talkingAnimationInterval) {
+                    clearInterval(talkingAnimationInterval);
+                    talkingAnimationInterval = null;
+                }
+            }
+
+            // Function to update mic button state
+            function updateMicButtonState() {
+                if (isRecording) {
+                    playMicButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                    playMicButton.disabled = false;
+                } else if (isProcessing) {
+                    playMicButton.classList.add('bg-gray-500', 'cursor-not-allowed');
+                    playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-red-500', 'hover:bg-red-600');
+                    playMicButton.disabled = true;
+                } else {
+                    playMicButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    playMicButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'bg-gray-500', 'cursor-not-allowed');
+                    playMicButton.disabled = false;
+                }
+            }
+
+            // Function to stop recording
+            function stopRecording() {
+                if (mediaRecorder && isRecording) {
+                    console.log('Stopping recording...');
+                    mediaRecorder.stop();
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    isRecording = false;
+                    updateMicButtonState();
+                    updateMascotEmoji('🤔'); // Transition to thinking state
                 }
             }
 
@@ -288,14 +385,23 @@
                     console.log('Starting recording in Play mode...');
                     try {
                         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        
+                        // Check for supported MIME types
+                        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') 
+                            ? 'audio/webm;codecs=opus'
+                            : 'audio/webm';
+                            
+                        console.log('Using MIME type:', mimeType);
+                        
                         mediaRecorder = new MediaRecorder(stream, {
-                            mimeType: 'audio/webm',
+                            mimeType: mimeType,
                             audioBitsPerSecond: 128000
                         });
                         
                         let audioChunks = [];
                         
                         mediaRecorder.ondataavailable = (event) => {
+                            console.log('Data available:', event.data.size);
                             if (event.data.size > 0) {
                                 audioChunks.push(event.data);
                             }
@@ -307,7 +413,9 @@
                             updateMicButtonState();
                             updateMascotEmoji('🤔'); // Show thinking emoji during processing
                             
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            const audioBlob = new Blob(audioChunks, { type: mimeType });
+                            console.log('Audio blob size:', audioBlob.size);
+                            
                             const formData = new FormData();
                             formData.append('audio', audioBlob, 'audio.webm');
                             
@@ -317,6 +425,10 @@
                                     method: 'POST',
                                     body: formData
                                 });
+                                
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
                                 
                                 const data = await response.json();
                                 console.log('Play mode transcription:', data);
@@ -334,6 +446,10 @@
                                         })
                                     });
                                     
+                                    if (!llmResponse.ok) {
+                                        throw new Error(`HTTP error! status: ${llmResponse.status}`);
+                                    }
+                                    
                                     const llmData = await llmResponse.json();
                                     console.log('LLM response in Play mode:', llmData);
                                     
@@ -350,9 +466,11 @@
                             }
                         };
                         
-                        mediaRecorder.start();
+                        // Start recording with a small timeslice to get data more frequently
+                        mediaRecorder.start(100);
                         isRecording = true;
                         updateMicButtonState();
+                        updateMascotEmoji('🎤'); // Show listening state
 
                         // Auto-stop recording after 10 seconds
                         setTimeout(() => {
@@ -373,7 +491,7 @@
 
             // Initialize mic button state and mascot emoji
             updateMicButtonState();
-            updateMascotEmoji('🌟');
+            updateMascotEmoji('🌟'); // Start with idle state
 
             // Make the speaking animation function globally available
             window.onLLMSpeaking = function(isSpeaking) {
@@ -389,7 +507,7 @@
         /* Speaking animation styles */
         .wave-circle {
             position: absolute;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             animation: wave 2s infinite;
         }
