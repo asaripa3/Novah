@@ -89,7 +89,7 @@ The system is built on a multi-agent architecture that works together to provide
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/NovahSpeaks.git
+git clone https://github.com/asaripa3/Novah.git
 cd NovahSpeaks
 ```
 
