@@ -7,31 +7,28 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <style>
-        html, body { height: 100%; margin: 0; padding: 0; }
-        body { background: #051326; min-height: 100vh; height: 100vh; }
-        .main-card { background: #051326; height: 100vh; min-height: 100vh; }
-        .header-bar { background: #061F40; }
-        .send-btn { background: #A4A4A6; }
-        .send-btn:hover { background: #99BF0F; }
-        .accent-border { border-color: #A4A4A6; }
-        .message {
-            max-width: 60%;
-            min-width: 80px;
-            padding: 1rem;
-            border-radius: 1rem;
-            margin-bottom: 1.25rem;
-            animation: messageAppear 0.3s ease-out;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            word-break: break-word;
-        }
-    </style>
 </head>
-<body class="h-full w-full">
+<body class="h-full w-full chat-page">
     <div class="main-card flex flex-col h-full w-full rounded-none shadow-none border-0">
+        <!-- Recording Overlay -->
+        <div id="recording-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+            <div class="bg-white rounded-lg p-8 flex flex-col items-center">
+                <div class="recording-waves mb-4">
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                    <div class="wave"></div>
+                </div>
+                <p class="text-lg font-semibold text-gray-800">Recording...</p>
+                <button id="stop-recording" class="mt-4 bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                    Stop Recording
+                </button>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
-            <h1 class="text-2xl md:text-3xl font-bold text-white tracking-tight">NovahSpeaks</h1>
+            <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
             <div class="text-white" id="user-name-display"></div>
         </header>
 
@@ -43,33 +40,41 @@
             <!-- Welcome Message -->
             <div class="message assistant-message">
                 <div class="flex items-center space-x-2 mb-1">
-                    <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <span class="text-indigo-600 text-sm font-semibold">N</span>
+                    <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                        <span class="text-indigo-600 text-sm font-semibold">💗</span>
                     </div>
-                    <span class="text-sm text-gray-500">NovahSpeaks</span>
+                    <span class="text-sm text-white">Novah</span>
                 </div>
                 <p id="welcome-message">Hello! I'm here to help you. How can I assist you today?</p>
             </div>
         </div>
 
         <!-- Input Area -->
-        <div class="border-t border-[#979DA6] px-6 py-5 bg-gray-800 sticky bottom-0 z-10">
+        <div class="px-6 py-5 bg-black sticky bottom-0 z-10">
             <form id="chat-form" class="flex gap-4 items-center">
                 <div class="flex-1 relative">
                     <input type="text" 
                            id="message-input" 
-                           class="w-full rounded-xl border border-gray-300 px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all text-base"
+                           class="w-full rounded-xl px-4 py-3 transition-all text-base focus:outline-none"
                            placeholder="Type your message here..."
                            required autocomplete="off">
+                    <button type="button" 
+                            id="mic-button"
+                            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500 focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </button>
                 </div>
                 <button type="submit" 
-                        class="send-btn text-white px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 text-base">
+                        class="send-btn text-black px-7 py-3 rounded-xl font-semibold shadow-md hover:scale-105 transition-all text-base">
                     Send
                 </button>
             </form>
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='speech.js') }}"></script>
     <script>
         // Check if user has a name and emoji stored
         window.addEventListener('load', function() {
@@ -97,4 +102,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

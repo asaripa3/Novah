@@ -18,3 +18,8 @@
 {"id": "mem_018", "text": "I like it when it rains too", "tags": ["rain"], "emotion": "happy", "vocabulary": ["rain"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.2, "memory_type": "joy"}
 {"id": "mem_019", "text": "Do you like talking to me?", "tags": ["talk"], "emotion": "happy", "vocabulary": ["talk"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.2, "memory_type": "experience"}
 {"id": "mem_020", "text": "I like playing blocksworld", "tags": ["blocksworld", "play"], "emotion": "happy", "vocabulary": ["blocksworld", "play"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "joy"}
+{"id": "mem_021", "text": "Hi novah", "tags": ["novah"], "emotion": "curious", "vocabulary": ["novah"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.2, "memory_type": "experience"}
+{"id": "mem_022", "text": "Hi, Hello, How are you?", "tags": ["hello"], "emotion": "curious", "vocabulary": ["hello"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.2, "memory_type": "experience"}
+{"id": "mem_023", "text": "I am happy", "tags": ["be"], "emotion": "happy", "vocabulary": ["be"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "joy"}
+{"id": "mem_024", "text": "Thank you. Are you eating daily?", "tags": ["eat"], "emotion": "confused", "vocabulary": ["eat"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.3, "memory_type": "experience"}
+{"id": "mem_025", "text": "Recording Overlay", "tags": ["overlay", "record"], "emotion": "confused", "vocabulary": ["overlay", "record"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "experience"}

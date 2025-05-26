@@ -18,18 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isUser) {
             // User message header
             header.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center">
                     <span class="text-white text-sm">${window.userInfo.emoji}</span>
                 </div>
-                <span class="text-sm text-gray-500">${window.userInfo.name}</span>
+                <span class="text-sm text-white">${window.userInfo.name}</span>
             `;
         } else {
             // Assistant message header
             header.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <span class="text-indigo-600 text-sm font-semibold">N</span>
+                <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                    <span class="text-indigo-600 text-sm font-semibold">💗</span>
                 </div>
-                <span class="text-sm text-gray-500">NovahSpeaks</span>
+                <span class="text-sm text-white">Novah</span>
             `;
         }
         
