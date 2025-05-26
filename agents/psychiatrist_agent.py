@@ -342,6 +342,9 @@ class PsychiatristAgent:
         print("\n[Memory Evaluation]")
         print(f"Evaluating memory: {text}")
         
+        # Load existing memories for context
+        existing_memories = self._load_memories()
+        
         prompt = (
             "You are an expert in child psychology and memory formation. "
             "Evaluate this memory from a neurodiverse child's perspective.\n\n"
@@ -356,11 +359,30 @@ class PsychiatristAgent:
             "- should_save: boolean indicating if this memory is worth saving\n"
             "- significance_score: 0-1 scale of memory importance\n"
             "- reasoning: brief explanation of the decision\n"
-            "- memory_type: type of memory (e.g., 'experience', 'achievement', 'fear', 'joy')\n\n"
-            "Consider:\n"
-            "1. Is this a significant experience for the child?\n"
-            "2. Does it have emotional or developmental importance?\n"
-            "3. Would this memory be useful for future interactions?\n\n"
+            "- memory_type: type of memory (e.g., 'achievement', 'fear', 'milestone', 'preference', 'experience')\n\n"
+            "Consider these strict criteria for saving a memory:\n"
+            "1. Is this a significant experience or milestone for the child?\n"
+            "2. Does it have high emotional or developmental importance?\n"
+            "3. Would this memory be crucial for future interactions and understanding?\n"
+            "4. Is it a core preference, fear, or achievement?\n"
+            "5. Does it provide insight into the child's personality or needs?\n"
+            "6. Is this memory unique and not redundant with existing memories?\n"
+            "7. Does it represent a meaningful pattern or preference?\n\n"
+            "DO NOT save:\n"
+            "- Casual greetings or small talk\n"
+            "- Simple questions or statements\n"
+            "- Routine activities without emotional significance\n"
+            "- Temporary states or passing thoughts\n"
+            "- Redundant or similar memories\n"
+            "- Generic or vague statements\n"
+            "- Common preferences without deeper meaning\n\n"
+            "A core memory should:\n"
+            "- Reveal something important about the child's personality\n"
+            "- Show a significant preference or fear\n"
+            "- Represent a meaningful achievement or milestone\n"
+            "- Provide insight into the child's emotional needs\n"
+            "- Help understand the child's unique perspective\n\n"
+            "Only save memories that are truly meaningful and will be valuable for future interactions.\n"
             "Return ONLY the JSON object, no other text."
         )
 
@@ -384,6 +406,34 @@ class PsychiatristAgent:
             content = content.strip()
             
             memory_evaluation = json.loads(content)
+            
+            # Additional validation to ensure only truly significant memories are saved
+            if memory_evaluation["should_save"]:
+                # Require higher significance score for saving
+                if memory_evaluation["significance_score"] < 0.7:  # Increased threshold
+                    memory_evaluation["should_save"] = False
+                    memory_evaluation["reasoning"] += " Memory does not meet the minimum significance threshold."
+                
+                # Don't save casual conversations
+                if len(keywords) < 2 and emotion_analysis["emotional_intensity"] < 0.4:
+                    memory_evaluation["should_save"] = False
+                    memory_evaluation["reasoning"] += " Memory appears to be casual conversation without significant emotional or developmental value."
+                
+                # Check for redundancy with existing memories
+                is_redundant = False
+                for existing_memory in existing_memories:
+                    # Check for similar keywords and emotion
+                    keyword_overlap = len(set(keywords) & set(existing_memory["tags"]))
+                    if (keyword_overlap >= 2 and 
+                        existing_memory["emotion"] == emotion_analysis["primary_emotion"] and
+                        existing_memory["memory_type"] == memory_evaluation["memory_type"]):
+                        is_redundant = True
+                        break
+                
+                if is_redundant:
+                    memory_evaluation["should_save"] = False
+                    memory_evaluation["reasoning"] += " Memory appears to be redundant with existing memories."
+            
             print(f"Memory evaluation result: {json.dumps(memory_evaluation, indent=2)}")
             return memory_evaluation
         except json.JSONDecodeError as e:
@@ -435,9 +485,35 @@ class PsychiatristAgent:
         # Create memory entry if worth saving
         memory = None
         if memory_evaluation["should_save"]:
+            # Format the memory text in a clear, descriptive style
+            prompt = (
+                "You are an expert in child psychology and memory formation. "
+                "Rewrite this memory in a clear, descriptive third-person narrative style.\n\n"
+                "Original text: " + user_input + "\n\n"
+                "Guidelines:\n"
+                "1. Write in third person (e.g., 'Yahya' instead of 'I')\n"
+                "2. Be specific and descriptive\n"
+                "3. Include relevant details about the situation\n"
+                "4. Maintain a warm, supportive tone\n"
+                "5. Focus on the child's experience and perspective\n"
+                "6. Keep it concise but meaningful\n\n"
+                "Return ONLY the rewritten memory text, no other text."
+            )
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert in child psychology and memory formation. Return only the rewritten memory text."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3
+            )
+
+            formatted_text = response.choices[0].message.content.strip()
+            
             memory = {
                 "id": f"mem_{len(self._load_memories()) + 1:03d}",
-                "text": user_input,
+                "text": formatted_text,
                 "tags": keywords,
                 "emotion": emotion_analysis["primary_emotion"],
                 "vocabulary": keywords,
