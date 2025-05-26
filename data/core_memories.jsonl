@@ -23,3 +23,6 @@
 {"id": "mem_023", "text": "I am happy", "tags": ["be"], "emotion": "happy", "vocabulary": ["be"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "joy"}
 {"id": "mem_024", "text": "Thank you. Are you eating daily?", "tags": ["eat"], "emotion": "confused", "vocabulary": ["eat"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.3, "memory_type": "experience"}
 {"id": "mem_025", "text": "Recording Overlay", "tags": ["overlay", "record"], "emotion": "confused", "vocabulary": ["overlay", "record"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "experience"}
+{"id": "mem_026", "text": "I am jumping in the air", "tags": ["jumping", "air"], "emotion": "happy", "vocabulary": ["jumping", "air"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.4, "memory_type": "joy"}
+{"id": "mem_027", "text": "Hey I'm back", "tags": ["hey"], "emotion": "relieved", "vocabulary": ["hey"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.3, "memory_type": "relief"}
+{"id": "mem_028", "text": "hey I'm back", "tags": ["hey"], "emotion": "relieved", "vocabulary": ["hey"], "last_used": "2025-05-25", "used_count": 1, "importance_score": 0.3, "memory_type": "experience"}

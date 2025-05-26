@@ -30,6 +30,10 @@ def run_chat_session(
         chat_history: List of previous chat messages
     """
     try:
+        # Initialize chat history if not provided
+        if chat_history is None:
+            chat_history = []
+            
         # Process the input message
         if input_message:
             # Parse the query
@@ -37,6 +41,11 @@ def run_chat_session(
             
             # Process with psychiatrist agent
             psychiatrist_result = psychiatrist_agent.process_input(input_message, query_result)
+            
+            # Update profile with psychiatrist results
+            if "profile_updates" in psychiatrist_result:
+                profile.update(psychiatrist_result["profile_updates"])
+                save_profile(profile, "../data/yahya_profile.jsonl")
             
             # Retrieve relevant memories
             memories = memory_agent.retrieve(
@@ -60,6 +69,10 @@ def run_chat_session(
             # Sanitize response
             final_response = sanitizer_agent.sanitize(raw_response)
             
+            # Update chat history
+            chat_history.append(f"User: {input_message}")
+            chat_history.append(f"Assistant: {final_response}")
+            
             # If using web interface, put response in queue
             if response_queue:
                 response_queue.put(final_response)
@@ -70,18 +83,22 @@ def run_chat_session(
         else:
             # Interactive console mode
             print("Welcome to NovahSpeaks! Type 'quit' to exit.")
-            chat_history = []
             while True:
                 user_input = input("You: ").strip()
-                
+
                 if user_input.lower() == 'quit':
                     break
-                
+
                 # Parse the query
                 query_result = query_agent.parse_query(user_input)
                 
                 # Process with psychiatrist agent
                 psychiatrist_result = psychiatrist_agent.process_input(user_input, query_result)
+                
+                # Update profile with psychiatrist results
+                if "profile_updates" in psychiatrist_result:
+                    profile.update(psychiatrist_result["profile_updates"])
+                    save_profile(profile, "../data/yahya_profile.jsonl")
                 
                 # Retrieve relevant memories
                 memories = memory_agent.retrieve(
@@ -91,7 +108,7 @@ def run_chat_session(
                 
                 # Filter context
                 filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
-                
+
                 # Get top memory for response
                 top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
                 
@@ -104,7 +121,7 @@ def run_chat_session(
                 
                 # Sanitize response
                 final_response = sanitizer_agent.sanitize(raw_response)
-                
+
                 # Update chat history
                 chat_history.append(f"User: {user_input}")
                 chat_history.append(f"Assistant: {final_response}")

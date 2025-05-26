@@ -318,6 +318,14 @@ class PsychiatristAgent:
             content = content.strip()
             
             word_categories = json.loads(content)
+            # Ensure all required fields are present
+            if 'meaningful_words' not in word_categories:
+                word_categories['meaningful_words'] = []
+            if 'common_words' not in word_categories:
+                word_categories['common_words'] = []
+            if 'emotional_words' not in word_categories:
+                word_categories['emotional_words'] = []
+                
             print(f"Word evaluation result: {json.dumps(word_categories, indent=2)}")
             return word_categories
         except json.JSONDecodeError as e:
