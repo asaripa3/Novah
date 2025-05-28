@@ -40,7 +40,7 @@
                     Chat
                 </button>
                 <button id="play-tab" class="px-4 py-2 rounded-md text-white font-medium transition-all">
-                    Play
+                    Play (beta)
                 </button>
             </div>
         </header>
@@ -217,6 +217,7 @@
             // Function to play audio response
             async function playAudioResponse(response) {
                 console.log('Starting audio response playback...');
+                console.log('Agent Response:', response); // Log the agent's response
                 isProcessing = true;
                 updateMicButtonState();
                 updateMascotEmoji('🤔'); // Show thinking emoji during processing
@@ -234,11 +235,13 @@
                     // Set up event listeners
                     currentAudio.onplay = () => {
                         console.log('Audio started playing');
+                        console.log('Agent Speaking State: Active'); // Log speaking state
                         animateMascotSpeaking(true);
                     };
                     
                     currentAudio.onended = () => {
                         console.log('Audio finished playing');
+                        console.log('Agent Speaking State: Inactive'); // Log speaking state
                         animateMascotSpeaking(false);
                         currentAudio = null;
                         isProcessing = false;
@@ -247,6 +250,7 @@
                     
                     currentAudio.onerror = (error) => {
                         console.error('Error playing audio:', error);
+                        console.log('Agent Error State:', error); // Log error state
                         animateMascotSpeaking(false);
                         currentAudio = null;
                         isProcessing = false;
@@ -256,16 +260,19 @@
                     // Add loadeddata event to ensure audio is ready
                     currentAudio.onloadeddata = () => {
                         console.log('Audio data loaded, starting playback');
+                        console.log('Agent Audio State: Loaded'); // Log audio state
                     };
 
                     // Add waiting event to handle buffering
                     currentAudio.onwaiting = () => {
                         console.log('Audio buffering...');
+                        console.log('Agent Audio State: Buffering'); // Log buffering state
                     };
 
                     // Add canplay event to handle when audio can start playing
                     currentAudio.oncanplay = () => {
                         console.log('Audio can play now');
+                        console.log('Agent Audio State: Ready to Play'); // Log ready state
                     };
 
                     // Play the audio
@@ -273,14 +280,17 @@
                         console.log('Attempting to play audio...');
                         await currentAudio.play();
                         console.log('Audio play() called successfully');
+                        console.log('Agent Audio State: Playing'); // Log playing state
                     } catch (playError) {
                         console.error('Error during audio playback:', playError);
+                        console.log('Agent Error State:', playError); // Log play error
                         animateMascotSpeaking(false);
                         isProcessing = false;
                         updateMicButtonState();
                     }
                 } catch (error) {
                     console.error('Error setting up audio:', error);
+                    console.log('Agent Error State:', error); // Log setup error
                     animateMascotSpeaking(false);
                     isProcessing = false;
                     updateMicButtonState();
@@ -290,13 +300,12 @@
             // Function to animate mascot when speaking
             function animateMascotSpeaking(isSpeaking) {
                 console.log('Animating mascot speaking:', isSpeaking);
+                console.log('Agent Animation State:', isSpeaking ? 'Speaking' : 'Idle'); // Log animation state
                 if (isSpeaking) {
                     mascot.style.transform = 'scale(1.15)';
-                    // speakingAnimation.classList.remove('hidden'); // Commented out wave animation
                     startTalkingAnimation(); // Start the talking animation
                 } else {
                     mascot.style.transform = 'scale(1)';
-                    // speakingAnimation.classList.add('hidden'); // Commented out wave animation
                     stopTalkingAnimation(); // Stop the talking animation
                     updateMascotEmoji('🌟'); // Return to idle state
                 }
@@ -305,6 +314,7 @@
             // Function to start talking animation
             function startTalkingAnimation() {
                 console.log('Starting talking animation');
+                console.log('Agent Animation State: Talking Animation Started'); // Log animation state
                 const currentImg = document.getElementById('mascot-current');
                 const nextImg = document.getElementById('mascot-next');
                 let isTalking1 = true;
@@ -321,7 +331,6 @@
                         "{{ url_for('static', filename='Mascot/talking1.png') }}" : 
                         "{{ url_for('static', filename='Mascot/talking2.png') }}";
                     
-                    
                     // After transition, swap the images
                     setTimeout(() => {
                         // Swap the image sources
@@ -329,8 +338,8 @@
                         currentImg.src = nextImg.src;
                         nextImg.src = tempSrc;
                         
-                        
                         isTalking1 = !isTalking1;
+                        console.log('Agent Animation Frame:', isTalking1 ? 'Talking1' : 'Talking2'); // Log animation frame
                     }, 150);
                 }, 300);
             }
@@ -338,6 +347,7 @@
             // Function to stop talking animation
             function stopTalkingAnimation() {
                 console.log('Stopping talking animation');
+                console.log('Agent Animation State: Talking Animation Stopped'); // Log animation state
                 if (talkingAnimationInterval) {
                     clearInterval(talkingAnimationInterval);
                     talkingAnimationInterval = null;
@@ -346,18 +356,22 @@
 
             // Function to update mic button state
             function updateMicButtonState() {
+                console.log('Updating mic button state:', { isRecording, isProcessing }); // Log mic state
                 if (isRecording) {
                     playMicButton.classList.add('bg-red-500', 'hover:bg-red-600');
                     playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                     playMicButton.disabled = false;
+                    console.log('Agent Mic State: Recording'); // Log mic state
                 } else if (isProcessing) {
                     playMicButton.classList.add('bg-gray-500', 'cursor-not-allowed');
                     playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-red-500', 'hover:bg-red-600');
                     playMicButton.disabled = true;
+                    console.log('Agent Mic State: Processing'); // Log mic state
                 } else {
                     playMicButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
                     playMicButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'bg-gray-500', 'cursor-not-allowed');
                     playMicButton.disabled = false;
+                    console.log('Agent Mic State: Ready'); // Log mic state
                 }
             }
 
@@ -365,6 +379,7 @@
             function stopRecording() {
                 if (mediaRecorder && isRecording) {
                     console.log('Stopping recording...');
+                    console.log('Agent Recording State: Stopping'); // Log recording state
                     mediaRecorder.stop();
                     if (stream) {
                         stream.getTracks().forEach(track => track.stop());
