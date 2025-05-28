@@ -1,6 +1,21 @@
 # NovahSpeaks
 
+![NovahSpeaks Overview](Demo/overview.png)
+
 NovahSpeaks is an AI-powered chat application designed to provide a supportive and engaging conversation experience. The application features a modern, user-friendly interface with both text and voice interaction capabilities.
+
+## 📁 Project Structure
+
+```
+NovahSpeaks/
+├── agents/           # Agent implementations
+├── data/            # Core memories and profiles
+├── engine/          # Core engine components
+├── utils/           # Utility functions
+├── main.py          # Application entry point
+├── llm_config.py    # LLM configuration
+└── README.md        # This file
+```
 
 ## 🌟 Features
 
@@ -41,6 +56,8 @@ NovahSpeaks is an AI-powered chat application designed to provide a supportive a
 - **Context Awareness**: Maintains conversation context for relevant responses
 
 ## 🏗️ Architecture
+
+![Agentic Architecture](Demo/architecture.png)
 
 The system is built on a multi-agent architecture that works together to provide personalized responses:
 
@@ -130,18 +147,3 @@ cp .env.example .env
 4. **Navigation**:
    - Click the "NovahSpeaks" title to return to the home page
    - Use the back button to return to previous pages
-
-## 📁 Project Structure
-
-```
-NovahSpeaks/
-├── agents/           # Agent implementations
-├── data/            # Core memories and profiles
-├── engine/          # Core engine components
-├── utils/           # Utility functions
-├── main.py          # Application entry point
-├── llm_config.py    # LLM configuration
-└── README.md        # This file
-```
-
-
