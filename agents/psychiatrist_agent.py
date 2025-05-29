@@ -485,18 +485,22 @@ class PsychiatristAgent:
         # Create memory entry if worth saving
         memory = None
         if memory_evaluation["should_save"]:
-            # Format the memory text in a clear, descriptive style
+            # Format the memory text in a personal, first-person narrative style
             prompt = (
                 "You are an expert in child psychology and memory formation. "
-                "Rewrite this memory in a clear, descriptive third-person narrative style.\n\n"
+                "Rewrite this memory from Yahya's perspective, focusing on his feelings and experiences.\n\n"
                 "Original text: " + user_input + "\n\n"
                 "Guidelines:\n"
-                "1. Write in third person (e.g., 'Yahya' instead of 'I')\n"
-                "2. Be specific and descriptive\n"
-                "3. Include relevant details about the situation\n"
-                "4. Maintain a warm, supportive tone\n"
-                "5. Focus on the child's experience and perspective\n"
-                "6. Keep it concise but meaningful\n\n"
+                "1. Write in first person (e.g., 'I felt', 'I remember')\n"
+                "2. Focus on emotional experiences and feelings\n"
+                "3. Include how Yahya felt at the time and how he feels now\n"
+                "4. Use simple, clear language appropriate for a 10-year-old\n"
+                "5. Emphasize personal reactions and emotional responses\n"
+                "6. Keep it concise but meaningful\n"
+                "7. Include both past and present feelings when relevant\n"
+                "8. Use phrases like 'I felt', 'I remember', 'I wish', 'I understand'\n\n"
+                "Example format:\n"
+                "'I felt [emotion] when [situation]. I couldn't [express/understand] at the time, but now I [current understanding/feeling].'\n\n"
                 "Return ONLY the rewritten memory text, no other text."
             )
 
