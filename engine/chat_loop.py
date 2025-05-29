@@ -36,49 +36,64 @@ def run_chat_session(
 
         # Process the input message
         if input_message:
-            # Parse the query
-            query_result = query_agent.parse_query(input_message)
-            
-            # Process with psychiatrist agent
-            psychiatrist_result = psychiatrist_agent.process_input(input_message, query_result)
-            
-            # Update profile with psychiatrist results
-            if "profile_updates" in psychiatrist_result:
-                profile.update(psychiatrist_result["profile_updates"])
-                save_profile(profile, "../data/yahya_profile.jsonl")
+            try:
+                # Parse the query
+                query_result = query_agent.parse_query(input_message)
+                
+                # Process with psychiatrist agent
+                try:
+                    psychiatrist_result = psychiatrist_agent.process_input(input_message, query_result)
+                    
+                    # Update profile with psychiatrist results
+                    if "profile_updates" in psychiatrist_result:
+                        profile.update(psychiatrist_result["profile_updates"])
+                        save_profile(profile, "../data/yahya_profile.jsonl")
+                except Exception as e:
+                    print(f"Error in psychiatrist processing: {str(e)}")
+                    # Continue without psychiatrist results
+                    psychiatrist_result = {"emotion_analysis": {"primary_emotion": "neutral"}}
+                
+                # Get emotion from psychiatrist result or default to neutral
+                emotion = psychiatrist_result.get("emotion_analysis", {}).get("primary_emotion", "neutral")
+                
+                # Retrieve relevant memories
+                memories = memory_agent.retrieve(
+                    query_keywords=query_result["query_keywords"],
+                    emotion=emotion
+                )
 
-            # Retrieve relevant memories
-            memories = memory_agent.retrieve(
-                query_keywords=query_result["query_keywords"],
-                emotion=query_result["emotion"]
-            )
-
-            # Filter context
-            filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
-            
-            # Get top memory for response
-            top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
-            
-            # Build prompt with chat history
-            dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
-            prompt = planner_agent.build_prompt(input_message, top_memory, profile, dialogue_context)
-            
-            # Generate response
-            raw_response = responder_agent.get_response(prompt)
-            
-            # Sanitize response
-            final_response = sanitizer_agent.sanitize(raw_response)
-            
-            # Update chat history
-            chat_history.append(f"User: {input_message}")
-            chat_history.append(f"Assistant: {final_response}")
-            
-            # If using web interface, put response in queue
-            if response_queue:
-                response_queue.put(final_response)
-                return
-            
-            return final_response
+                # Filter context
+                filtered_context = context_agent.filter(memories=memories, query_emotion=emotion)
+                
+                # Get top memory for response
+                top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
+                
+                # Build prompt with chat history
+                dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
+                prompt = planner_agent.build_prompt(input_message, top_memory, profile, dialogue_context)
+                
+                # Generate response
+                raw_response = responder_agent.get_response(prompt)
+                
+                # Sanitize response
+                final_response = sanitizer_agent.sanitize(raw_response)
+                
+                # Update chat history
+                chat_history.append(f"User: {input_message}")
+                chat_history.append(f"Assistant: {final_response}")
+                
+                # If using web interface, put response in queue
+                if response_queue:
+                    response_queue.put(final_response)
+                    return
+                
+                return final_response
+            except Exception as e:
+                error_message = f"Error processing message: {str(e)}"
+                print(error_message)
+                if response_queue:
+                    response_queue.put(error_message)
+                return error_message
             
         else:
             # Interactive console mode
@@ -89,44 +104,57 @@ def run_chat_session(
                 if user_input.lower() == 'quit':
                     break
 
-                # Parse the query
-                query_result = query_agent.parse_query(user_input)
-                
-                # Process with psychiatrist agent
-                psychiatrist_result = psychiatrist_agent.process_input(user_input, query_result)
-                
-                # Update profile with psychiatrist results
-                if "profile_updates" in psychiatrist_result:
-                    profile.update(psychiatrist_result["profile_updates"])
-                    save_profile(profile, "../data/yahya_profile.jsonl")
-                
-                # Retrieve relevant memories
-                memories = memory_agent.retrieve(
-                    query_keywords=query_result["query_keywords"],
-                    emotion=query_result["emotion"]
-                )
-                
-                # Filter context
-                filtered_context = context_agent.filter(memories=memories, query_emotion=query_result["emotion"])
+                try:
+                    # Parse the query
+                    query_result = query_agent.parse_query(user_input)
+                    
+                    # Process with psychiatrist agent
+                    try:
+                        psychiatrist_result = psychiatrist_agent.process_input(user_input, query_result)
+                        
+                        # Update profile with psychiatrist results
+                        if "profile_updates" in psychiatrist_result:
+                            profile.update(psychiatrist_result["profile_updates"])
+                            save_profile(profile, "../data/yahya_profile.jsonl")
+                    except Exception as e:
+                        print(f"Error in psychiatrist processing: {str(e)}")
+                        # Continue without psychiatrist results
+                        psychiatrist_result = {"emotion_analysis": {"primary_emotion": "neutral"}}
+                    
+                    # Get emotion from psychiatrist result or default to neutral
+                    emotion = psychiatrist_result.get("emotion_analysis", {}).get("primary_emotion", "neutral")
+                    
+                    # Retrieve relevant memories
+                    memories = memory_agent.retrieve(
+                        query_keywords=query_result["query_keywords"],
+                        emotion=emotion
+                    )
+                    
+                    # Filter context
+                    filtered_context = context_agent.filter(memories=memories, query_emotion=emotion)
 
-                # Get top memory for response
-                top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
-                
-                # Build prompt with chat history
-                dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
-                prompt = planner_agent.build_prompt(user_input, top_memory, profile, dialogue_context)
-                
-                # Generate response
-                raw_response = responder_agent.get_response(prompt)
-                
-                # Sanitize response
-                final_response = sanitizer_agent.sanitize(raw_response)
+                    # Get top memory for response
+                    top_memory = filtered_context[0]['text'] if filtered_context else "No specific memory was recalled for this question."
+                    
+                    # Build prompt with chat history
+                    dialogue_context = "\n".join(chat_history[-12:]) if chat_history else ""
+                    prompt = planner_agent.build_prompt(user_input, top_memory, profile, dialogue_context)
+                    
+                    # Generate response
+                    raw_response = responder_agent.get_response(prompt)
+                    
+                    # Sanitize response
+                    final_response = sanitizer_agent.sanitize(raw_response)
 
-                # Update chat history
-                chat_history.append(f"User: {user_input}")
-                chat_history.append(f"Assistant: {final_response}")
-                
-                print(f"NovahSpeaks: {final_response}")
+                    # Update chat history
+                    chat_history.append(f"User: {user_input}")
+                    chat_history.append(f"Assistant: {final_response}")
+                    
+                    print(f"NovahSpeaks: {final_response}")
+                except Exception as e:
+                    error_message = f"Error processing message: {str(e)}"
+                    print(error_message)
+                    continue
                 
     except Exception as e:
         error_message = f"Error in chat session: {str(e)}"

@@ -183,6 +183,15 @@
             let stream = null;
             let talkingAnimationInterval = null;
 
+            // Initialize mic button state and mascot emoji
+            updateMicButtonState();
+            updateMascotEmoji('🌟'); // Start with idle state
+
+            // Make the speaking animation function globally available
+            window.onLLMSpeaking = function(isSpeaking) {
+                animateMascotSpeaking(isSpeaking);
+            };
+
             // Function to update mascot emoji with smooth transition
             function updateMascotEmoji(emoji) {
                 const currentImg = document.getElementById('mascot-current');
@@ -214,13 +223,43 @@
                 }, 300);
             }
 
+            // Initialize audio context and preload
+            let audioContext = null;
+            let audioInitialized = false;
+
+            // Function to initialize audio context
+            async function initializeAudio() {
+                if (!audioInitialized) {
+                    try {
+                        // Create audio context
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        console.log('Audio context initialized');
+                        
+                        // Create a silent buffer to warm up the audio context
+                        const buffer = audioContext.createBuffer(1, 1, 22050);
+                        const source = audioContext.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(audioContext.destination);
+                        source.start(0);
+                        
+                        audioInitialized = true;
+                        console.log('Audio system initialized and warmed up');
+                    } catch (error) {
+                        console.error('Error initializing audio:', error);
+                    }
+                }
+            }
+
             // Function to play audio response
             async function playAudioResponse(response) {
                 console.log('Starting audio response playback...');
-                console.log('Agent Response:', response); // Log the agent's response
+                console.log('Agent Response:', response);
                 isProcessing = true;
                 updateMicButtonState();
-                updateMascotEmoji('🤔'); // Show thinking emoji during processing
+                updateMascotEmoji('🤔'); // Keep thinking state during processing
+
+                // Initialize audio if not already done
+                await initializeAudio();
 
                 // Stop any currently playing audio
                 if (currentAudio) {
@@ -229,92 +268,150 @@
                 }
 
                 try {
-                    // Create new audio element
-                    currentAudio = new Audio('/api/speech');
+                    // Add timestamp to prevent caching
+                    const timestamp = new Date().getTime();
+                    const audioUrl = `/api/speech?t=${timestamp}`;
+                    console.log('Loading audio from:', audioUrl);
                     
-                    // Set up event listeners
+                    // Create new audio element
+                    currentAudio = new Audio();
+                    
+                    // Set up event listeners before loading
                     currentAudio.onplay = () => {
                         console.log('Audio started playing');
-                        console.log('Agent Speaking State: Active'); // Log speaking state
-                        animateMascotSpeaking(true);
+                        console.log('Agent Speaking State: Active');
+                        // Start talking animation immediately when audio starts
+                        startTalkingAnimation();
+                        mascot.style.transform = 'scale(1.15)';
                     };
                     
                     currentAudio.onended = () => {
                         console.log('Audio finished playing');
-                        console.log('Agent Speaking State: Inactive'); // Log speaking state
-                        animateMascotSpeaking(false);
+                        console.log('Agent Speaking State: Inactive');
+                        // Stop talking animation and return to idle
+                        stopTalkingAnimation();
+                        mascot.style.transform = 'scale(1)';
                         currentAudio = null;
                         isProcessing = false;
                         updateMicButtonState();
+                        updateMascotEmoji('🌟'); // Return to idle state after speaking
                     };
                     
                     currentAudio.onerror = (error) => {
                         console.error('Error playing audio:', error);
-                        console.log('Agent Error State:', error); // Log error state
-                        animateMascotSpeaking(false);
+                        console.log('Agent Error State:', error);
+                        stopTalkingAnimation();
+                        mascot.style.transform = 'scale(1)';
                         currentAudio = null;
                         isProcessing = false;
                         updateMicButtonState();
+                        updateMascotEmoji('🌟'); // Return to idle state on error
+                        // Show error message to user
+                        alert('Sorry, there was an error playing the audio response. The text response is still available.');
                     };
 
                     // Add loadeddata event to ensure audio is ready
                     currentAudio.onloadeddata = () => {
                         console.log('Audio data loaded, starting playback');
-                        console.log('Agent Audio State: Loaded'); // Log audio state
+                        console.log('Agent Audio State: Loaded');
                     };
 
                     // Add waiting event to handle buffering
                     currentAudio.onwaiting = () => {
                         console.log('Audio buffering...');
-                        console.log('Agent Audio State: Buffering'); // Log buffering state
+                        console.log('Agent Audio State: Buffering');
                     };
 
                     // Add canplay event to handle when audio can start playing
                     currentAudio.oncanplay = () => {
                         console.log('Audio can play now');
-                        console.log('Agent Audio State: Ready to Play'); // Log ready state
+                        console.log('Agent Audio State: Ready to Play');
                     };
+
+                    // Load the audio first
+                    currentAudio.src = audioUrl;
+                    
+                    // Wait for audio to be loaded with retry mechanism
+                    let retryCount = 0;
+                    const maxRetries = 3;
+                    
+                    while (retryCount < maxRetries) {
+                        try {
+                            await new Promise((resolve, reject) => {
+                                const timeoutId = setTimeout(() => {
+                                    reject(new Error('Audio loading timeout'));
+                                }, 5000); // 5 second timeout
+                                
+                                currentAudio.oncanplaythrough = () => {
+                                    clearTimeout(timeoutId);
+                                    resolve();
+                                };
+                                
+                                currentAudio.onerror = (error) => {
+                                    clearTimeout(timeoutId);
+                                    reject(error);
+                                };
+                            });
+                            break; // If successful, break the retry loop
+                        } catch (error) {
+                            retryCount++;
+                            console.log(`Audio loading attempt ${retryCount} failed:`, error);
+                            if (retryCount === maxRetries) {
+                                throw new Error('Failed to load audio after multiple attempts');
+                            }
+                            // Wait before retrying
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                    }
 
                     // Play the audio
                     try {
                         console.log('Attempting to play audio...');
                         await currentAudio.play();
                         console.log('Audio play() called successfully');
-                        console.log('Agent Audio State: Playing'); // Log playing state
+                        console.log('Agent Audio State: Playing');
                     } catch (playError) {
                         console.error('Error during audio playback:', playError);
-                        console.log('Agent Error State:', playError); // Log play error
-                        animateMascotSpeaking(false);
+                        console.log('Agent Error State:', playError);
+                        stopTalkingAnimation();
+                        mascot.style.transform = 'scale(1)';
                         isProcessing = false;
                         updateMicButtonState();
+                        updateMascotEmoji('🌟'); // Return to idle state on error
+                        // Show error message to user
+                        alert('Sorry, there was an error playing the audio response. The text response is still available.');
                     }
                 } catch (error) {
                     console.error('Error setting up audio:', error);
-                    console.log('Agent Error State:', error); // Log setup error
-                    animateMascotSpeaking(false);
+                    console.log('Agent Error State:', error);
+                    stopTalkingAnimation();
+                    mascot.style.transform = 'scale(1)';
                     isProcessing = false;
                     updateMicButtonState();
+                    updateMascotEmoji('🌟'); // Return to idle state on error
+                    // Show error message to user
+                    alert('Sorry, there was an error playing the audio response. The text response is still available.');
                 }
             }
 
             // Function to animate mascot when speaking
             function animateMascotSpeaking(isSpeaking) {
                 console.log('Animating mascot speaking:', isSpeaking);
-                console.log('Agent Animation State:', isSpeaking ? 'Speaking' : 'Idle'); // Log animation state
+                console.log('Agent Animation State:', isSpeaking ? 'Speaking' : 'Idle');
                 if (isSpeaking) {
                     mascot.style.transform = 'scale(1.15)';
-                    startTalkingAnimation(); // Start the talking animation
+                    startTalkingAnimation();
                 } else {
                     mascot.style.transform = 'scale(1)';
-                    stopTalkingAnimation(); // Stop the talking animation
-                    updateMascotEmoji('🌟'); // Return to idle state
+                    stopTalkingAnimation();
+                    updateMascotEmoji('🌟'); // Return to idle state after speaking
                 }
             }
 
             // Function to start talking animation
             function startTalkingAnimation() {
                 console.log('Starting talking animation');
-                console.log('Agent Animation State: Talking Animation Started'); // Log animation state
+                console.log('Agent Animation State: Talking Animation Started');
                 const currentImg = document.getElementById('mascot-current');
                 const nextImg = document.getElementById('mascot-next');
                 let isTalking1 = true;
@@ -331,6 +428,10 @@
                         "{{ url_for('static', filename='Mascot/talking1.png') }}" : 
                         "{{ url_for('static', filename='Mascot/talking2.png') }}";
                     
+                    // Fade out current image while fading in next image
+                    currentImg.style.opacity = '0';
+                    nextImg.style.opacity = '1';
+                    
                     // After transition, swap the images
                     setTimeout(() => {
                         // Swap the image sources
@@ -338,8 +439,12 @@
                         currentImg.src = nextImg.src;
                         nextImg.src = tempSrc;
                         
+                        // Reset opacities
+                        currentImg.style.opacity = '1';
+                        nextImg.style.opacity = '0';
+                        
                         isTalking1 = !isTalking1;
-                        console.log('Agent Animation Frame:', isTalking1 ? 'Talking1' : 'Talking2'); // Log animation frame
+                        console.log('Agent Animation Frame:', isTalking1 ? 'Talking1' : 'Talking2');
                     }, 150);
                 }, 300);
             }
@@ -347,7 +452,7 @@
             // Function to stop talking animation
             function stopTalkingAnimation() {
                 console.log('Stopping talking animation');
-                console.log('Agent Animation State: Talking Animation Stopped'); // Log animation state
+                console.log('Agent Animation State: Talking Animation Stopped');
                 if (talkingAnimationInterval) {
                     clearInterval(talkingAnimationInterval);
                     talkingAnimationInterval = null;
@@ -356,22 +461,22 @@
 
             // Function to update mic button state
             function updateMicButtonState() {
-                console.log('Updating mic button state:', { isRecording, isProcessing }); // Log mic state
+                console.log('Updating mic button state:', { isRecording, isProcessing });
                 if (isRecording) {
                     playMicButton.classList.add('bg-red-500', 'hover:bg-red-600');
                     playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
                     playMicButton.disabled = false;
-                    console.log('Agent Mic State: Recording'); // Log mic state
+                    console.log('Agent Mic State: Recording');
                 } else if (isProcessing) {
                     playMicButton.classList.add('bg-gray-500', 'cursor-not-allowed');
                     playMicButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-red-500', 'hover:bg-red-600');
                     playMicButton.disabled = true;
-                    console.log('Agent Mic State: Processing'); // Log mic state
+                    console.log('Agent Mic State: Processing');
                 } else {
                     playMicButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
                     playMicButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'bg-gray-500', 'cursor-not-allowed');
                     playMicButton.disabled = false;
-                    console.log('Agent Mic State: Ready'); // Log mic state
+                    console.log('Agent Mic State: Ready');
                 }
             }
 
@@ -379,14 +484,14 @@
             function stopRecording() {
                 if (mediaRecorder && isRecording) {
                     console.log('Stopping recording...');
-                    console.log('Agent Recording State: Stopping'); // Log recording state
+                    console.log('Agent Recording State: Stopping');
                     mediaRecorder.stop();
                     if (stream) {
                         stream.getTracks().forEach(track => track.stop());
                     }
                     isRecording = false;
                     updateMicButtonState();
-                    updateMascotEmoji('🤔'); // Transition to thinking state
+                    updateMascotEmoji('🤔'); // Change to thinking state after recording stops
                 }
             }
 
@@ -426,7 +531,7 @@
                             console.log('Play mode recording stopped, processing audio...');
                             isProcessing = true;
                             updateMicButtonState();
-                            updateMascotEmoji('🤔'); // Show thinking emoji during processing
+                            updateMascotEmoji('🤔'); // Immediately switch to thinking state
                             
                             const audioBlob = new Blob(audioChunks, { type: mimeType });
                             console.log('Audio blob size:', audioBlob.size);
@@ -449,6 +554,9 @@
                                 console.log('Play mode transcription:', data);
                                 
                                 if (data.text) {
+                                    // Keep thinking state during LLM processing
+                                    updateMascotEmoji('🤔');
+                                    
                                     // Process through LLM and play response
                                     const llmResponse = await fetch('/api/chat', {
                                         method: 'POST',
@@ -469,6 +577,8 @@
                                     console.log('LLM response in Play mode:', llmData);
                                     
                                     if (llmData.response) {
+                                        // Keep thinking state until audio starts playing
+                                        updateMascotEmoji('🤔');
                                         await playAudioResponse(llmData.response);
                                     }
                                 }
@@ -477,7 +587,7 @@
                                 animateMascotSpeaking(false);
                                 isProcessing = false;
                                 updateMicButtonState();
-                                updateMascotEmoji('🌟'); // Reset to default emoji on error
+                                updateMascotEmoji('🌟'); // Return to idle state on error
                             }
                         };
                         
@@ -497,21 +607,68 @@
                         console.error('Error accessing microphone in Play mode:', error);
                         isProcessing = false;
                         updateMicButtonState();
-                        updateMascotEmoji('🌟'); // Reset to default emoji on error
+                        updateMascotEmoji('🌟'); // Return to idle state on error
                     }
                 } else {
                     stopRecording();
                 }
             });
 
-            // Initialize mic button state and mascot emoji
-            updateMicButtonState();
-            updateMascotEmoji('🌟'); // Start with idle state
-
-            // Make the speaking animation function globally available
-            window.onLLMSpeaking = function(isSpeaking) {
-                animateMascotSpeaking(isSpeaking);
-            };
+            // Function to handle chat form submission
+            document.getElementById('chat-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const messageInput = document.getElementById('message-input');
+                const message = messageInput.value.trim();
+                
+                if (!message) return;
+                
+                // Initialize audio context for text mode too
+                await initializeAudio();
+                
+                // Add user message to chat
+                addMessageToChat(message, 'user');
+                messageInput.value = '';
+                
+                try {
+                    // Show thinking state
+                    updateMascotEmoji('🤔');
+                    
+                    // Send message to server
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('Chat response:', data);
+                    
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Add assistant response to chat
+                    addMessageToChat(data.response, 'assistant');
+                    
+                    // If audio is available, play it
+                    if (data.hasAudio) {
+                        await playAudioResponse(data.response);
+                    } else {
+                        // Return to idle state if no audio
+                        updateMascotEmoji('🌟');
+                    }
+                } catch (error) {
+                    console.error('Error in chat:', error);
+                    addMessageToChat('Sorry, there was an error processing your message. Please try again.', 'assistant');
+                    updateMascotEmoji('🌟'); // Return to idle state on error
+                }
+            });
         });
     </script>
     <style>

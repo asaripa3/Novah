@@ -122,8 +122,20 @@ def chat():
         client = Groq(api_key=groq_api_key)
         speech_file_path = os.path.join(PROJECT_ROOT, "web", "static", "speech.wav")
         
+        # Ensure the speech file directory exists
+        os.makedirs(os.path.dirname(speech_file_path), exist_ok=True)
+        
         try:
             print(f"Generating speech for response: {response}")
+            # Clean up any existing speech file
+            if os.path.exists(speech_file_path):
+                try:
+                    os.remove(speech_file_path)
+                    print("Removed existing speech file")
+                except Exception as e:
+                    print(f"Error removing existing speech file: {str(e)}")
+            
+            # Generate new speech file
             speech_response = client.audio.speech.create(
                 model="playai-tts",
                 voice="Jennifer-PlayAI",
@@ -135,6 +147,14 @@ def chat():
             speech_response.write_to_file(speech_file_path)
             print(f"Speech file saved to: {speech_file_path}")
             
+            # Verify the file was created and is accessible
+            if not os.path.exists(speech_file_path):
+                raise Exception("Speech file was not created successfully")
+                
+            # Verify file permissions
+            if not os.access(speech_file_path, os.R_OK):
+                raise Exception("Speech file is not readable")
+                
             return jsonify({
                 'response': response,
                 'status': 'success',
@@ -142,13 +162,16 @@ def chat():
             })
         except Exception as e:
             print(f"Speech generation error: {str(e)}")
+            # Return success with no audio if speech generation fails
             return jsonify({
                 'response': response,
                 'status': 'success',
-                'hasAudio': False
+                'hasAudio': False,
+                'error': str(e)
             })
             
     except Exception as e:
+        print(f"Error in chat session: {str(e)}")
         return jsonify({
             'error': str(e),
             'status': 'error'
@@ -158,10 +181,27 @@ def chat():
 def get_speech():
     speech_file_path = Path(__file__).parent / "static" / "speech.wav"
     print(f"Serving speech file from: {speech_file_path}")
+    
+    # Ensure the speech file exists and is accessible
     if not os.path.exists(speech_file_path):
         print("Speech file not found!")
         return jsonify({'error': 'Speech file not found'}), 404
-    return send_file(speech_file_path, mimetype='audio/wav')
+        
+    try:
+        # Verify the file is readable
+        if not os.access(speech_file_path, os.R_OK):
+            print("Speech file is not readable!")
+            return jsonify({'error': 'Speech file is not readable'}), 403
+            
+        # Read a small portion to verify
+        with open(speech_file_path, 'rb') as f:
+            # Just read a small portion to verify
+            f.read(1024)
+            
+        return send_file(speech_file_path, mimetype='audio/wav')
+    except Exception as e:
+        print(f"Error serving speech file: {str(e)}")
+        return jsonify({'error': 'Error accessing speech file'}), 500
 
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe_audio():
