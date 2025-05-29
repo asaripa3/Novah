@@ -567,8 +567,8 @@ class PsychiatristAgent:
             "emotion_analysis": emotion_analysis,
             "memory_evaluation": memory_evaluation,
             "profile_updates": {
-                "new_vocabulary": [w for w in keywords if w not in profile["known_vocabulary"]],
-                "new_triggers": [w for w in keywords if emotion_analysis["is_triggering"] and w not in profile["trigger_words"]],
-                "new_topics": [w for w in keywords if emotion_analysis["primary_emotion"] in ["happy", "excited", "curious"] and w not in profile["preferred_topics"]]
+                "known_vocabulary": profile["known_vocabulary"],
+                "trigger_words": profile["trigger_words"],
+                "preferred_topics": profile["preferred_topics"]
             }
         } 
