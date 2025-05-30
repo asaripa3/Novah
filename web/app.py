@@ -19,6 +19,7 @@ from agents.response_planner_agent import ResponsePlannerAgent
 from agents.llm_responder_agent import LLMResponderAgent
 from agents.sanitizer_agent import SanitizerAgent
 from agents.psychiatrist_agent import PsychiatristAgent
+from agents.context_analyzer_agent import ContextAnalyzerAgent
 from engine.chat_loop import run_chat_session
 import os
 from dotenv import load_dotenv
@@ -42,7 +43,8 @@ profile = load_profile(os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
 query_agent = QueryParserAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 memory_agent = MemoryRetrievalAgent(memory_file=os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl"))
 context_agent = ContextFilterAgent(known_vocabulary=profile.get("known_vocabulary", []))
-planner_agent = ResponsePlannerAgent()
+context_analyzer = ContextAnalyzerAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+planner_agent = ResponsePlannerAgent(context_analyzer=context_analyzer)
 responder_agent = LLMResponderAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 psychiatrist_agent = PsychiatristAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
