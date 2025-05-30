@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting up the user profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            color: white;
+        }
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+        .form-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: none; /* Hide all sections initially */
+        }
+        .form-section.active {
+            display: block; /* Show active section */
+        }
+        .section-title {
+            color: #3b82f6;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #e5e7eb;
+        }
+        .form-control, .form-select {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: rgba(0, 0, 0, 0.6);
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            transform: scale(1.05);
+        }
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+            border-color: #059669;
+            transform: scale(1.05);
+        }
+        h1 {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+        .header-bar {
+            background-color: rgba(0, 0, 0, 0.8);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .wizard-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .progress-container {
+            margin-bottom: 2rem;
+        }
+        .progress-step {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: rgba(59, 130, 246, 0.2);
+            color: white;
+            margin: 0 10px;
+            position: relative;
+        }
+        .progress-step.active {
+            background-color: #3b82f6;
+        }
+        .progress-step.completed {
+            background-color: #10b981;
+        }
+        .progress-line {
+            display: inline-block;
+            width: 50px;
+            height: 2px;
+            background-color: rgba(59, 130, 246, 0.2);
+            vertical-align: middle;
+        }
+        .progress-line.completed {
+            background-color: #10b981;
+        }
+        .step-title {
+            color: #3b82f6;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .word-container {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            min-height: 150px;
+        }
+        .word-bubble {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin: 0.25rem;
+            position: relative;
+        }
+        .word-bubble .remove-word {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .word-bubble:hover .remove-word {
+            opacity: 1;
+        }
+        .word-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .word-input {
+            flex-grow: 1;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+        }
+        .word-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .add-word-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-word-btn:hover {
+            background-color: #2563eb;
+        }
+        .container-title {
+            color: #3b82f6;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        .memory-container {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .memory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .memory-title {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .memory-content {
+            margin-bottom: 1rem;
+        }
+        .memory-description {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .memory-description:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .memory-bubbles {
+            margin-bottom: 1rem;
+        }
+        .memory-bubble {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin: 0.25rem;
+            position: relative;
+        }
+        .memory-bubble .remove-bubble {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .memory-bubble:hover .remove-bubble {
+            opacity: 1;
+        }
+        .memory-input-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .memory-input {
+            flex-grow: 1;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+        }
+        .memory-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .memory-type-select {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            width: 200px;
+        }
+        .memory-type-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .importance-input {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .importance-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .memory-nav-bubble {
+            display: inline-flex;
+            align-items: center;
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+        }
+        .memory-nav-bubble.active {
+            background-color: #2563eb;
+            transform: scale(1.05);
+        }
+        .memory-nav-bubble .remove-memory {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ef4444;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .memory-nav-bubble:hover .remove-memory {
+            opacity: 1;
+        }
+        .memory-container {
+            display: none;
+        }
+        .memory-container.active {
+            display: block;
+        }
+        .add-memory-bubble {
+            display: inline-flex;
+            align-items: center;
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px dashed #3b82f6;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        .add-memory-bubble:hover {
+            background-color: rgba(59, 130, 246, 0.3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
+        <a href="/" class="hover:opacity-80 transition-opacity">
+            <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
+        </a>
+    </header>
+
+    <div class="container">
+        <div class="profile-container">
+            <h1 class="text-center mb-4">Setting up the user profile</h1>
+            
+            <!-- Progress Indicator -->
+            <div class="progress-container text-center">
+                <div class="progress-step active" data-step="1">1</div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="2">2</div>
+                <div class="progress-line"></div>
+                <div class="progress-step" data-step="3">3</div>
+            </div>
+
+            <form id="profileForm" action="/setup_profile" method="POST">
+                <!-- Step 1: Basic Information -->
+                <div class="form-section active" data-step="1">
+                    <h3 class="step-title">Basic Information</h3>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mental_age" class="form-label">Mental Age</label>
+                            <input type="number" class="form-control" id="mental_age" name="mental_age" required>
+                        </div>
+                    </div>
+                    <div class="wizard-nav">
+                        <div></div>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(1)">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Vocabulary and Triggers -->
+                <div class="form-section" data-step="2">
+                    <h3 class="step-title">Vocabulary and Triggers</h3>
+                    
+                    <!-- Known Vocabulary Container -->
+                    <div class="word-container">
+                        <h4 class="container-title">Known Vocabulary</h4>
+                        <div id="vocabulary-bubbles" class="mb-3"></div>
+                        <div class="word-input-container">
+                            <input type="text" class="word-input" id="vocabulary-input" placeholder="Type a word and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addWord('vocabulary')">Add</button>
+                        </div>
+                        <input type="hidden" name="known_vocabulary" id="known_vocabulary">
+                    </div>
+
+                    <!-- Trigger Words Container -->
+                    <div class="word-container">
+                        <h4 class="container-title">Trigger Words</h4>
+                        <div id="trigger-bubbles" class="mb-3"></div>
+                        <div class="word-input-container">
+                            <input type="text" class="word-input" id="trigger-input" placeholder="Type a word and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addWord('trigger')">Add</button>
+                        </div>
+                        <input type="hidden" name="trigger_words" id="trigger_words">
+                    </div>
+
+                    <!-- Preferred Topics Container -->
+                    <div class="word-container">
+                        <h4 class="container-title">Preferred Topics</h4>
+                        <div id="topic-bubbles" class="mb-3"></div>
+                        <div class="word-input-container">
+                            <input type="text" class="word-input" id="topic-input" placeholder="Type a topic and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addWord('topic')">Add</button>
+                        </div>
+                        <input type="hidden" name="preferred_topics" id="preferred_topics">
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep(2)">Previous</button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(2)">Next</button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Core Memories -->
+                <div class="form-section" data-step="3">
+                    <h3 class="step-title">Core Memories</h3>
+                    
+                    <!-- Memory Navigation -->
+                    <div class="memory-nav" id="memory-nav">
+                    </div>
+
+                    <!-- Memory Containers -->
+                    <div id="memories-container">
+                        <div class="memory-container active" data-memory-id="1">
+                            <div class="memory-content">
+                                <textarea class="memory-description" name="memory_text[]" placeholder="Describe a significant memory or experience" required></textarea>
+                                
+                                <div class="memory-bubbles" id="tags-bubbles-1">
+                                    <h5 class="container-title">Tags</h5>
+                                    <div class="memory-input-container">
+                                        <input type="text" class="memory-input" placeholder="Type a tag and press Enter">
+                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'tags')">Add</button>
+                                    </div>
+                                </div>
+
+                                <div class="memory-bubbles" id="vocabulary-bubbles-1">
+                                    <h5 class="container-title">Vocabulary</h5>
+                                    <div class="memory-input-container">
+                                        <input type="text" class="memory-input" placeholder="Type a word and press Enter">
+                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'vocabulary')">Add</button>
+                                    </div>
+                                </div>
+
+                                <div class="memory-bubbles" id="emotion-bubbles-1">
+                                    <h5 class="container-title">Emotions</h5>
+                                    <div class="memory-input-container">
+                                        <input type="text" class="memory-input" placeholder="Type an emotion and press Enter">
+                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'emotion')">Add</button>
+                                    </div>
+                                </div>
+
+                                <div class="memory-bubbles" id="type-bubbles-1">
+                                    <h5 class="container-title">Memory Type</h5>
+                                    <div class="memory-input-container">
+                                        <input type="text" class="memory-input" placeholder="Type a memory type (e.g., media, experience, location)" required>
+                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'type')">Add</button>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h5 class="container-title">Importance Score</h5>
+                                    <input type="number" class="importance-input" min="0" max="1" step="0.1" value="0.8" 
+                                           oninput="updateImportanceValue(this)" name="memory_importance[]">
+                                    <div class="text-sm text-gray-400">Enter a value between 0 and 1 (e.g., 0.8)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="add-memory-bubble" onclick="addMemoryEntry()">
+                            + Add Another Memory
+                        </div>
+                    </div>
+
+                    <div class="wizard-nav">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep(3)">Previous</button>
+                        <button type="submit" class="btn btn-primary btn-lg">Create Profile</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function addMemoryEntry() {
+            const container = document.getElementById('memories-container');
+            const nav = document.getElementById('memory-nav');
+            const memoryId = container.children.length + 1;
+            
+            // Create memory container
+            const template = container.children[0].cloneNode(true);
+            template.className = 'memory-container';
+            template.dataset.memoryId = memoryId;
+            
+            // Clear all inputs and bubbles
+            template.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                input.value = '';
+            });
+            template.querySelectorAll('.memory-bubble').forEach(bubble => {
+                bubble.remove();
+            });
+            template.querySelector('.importance-input').value = '0.8';
+            
+            // Update IDs
+            template.querySelectorAll('[id]').forEach(element => {
+                element.id = element.id.replace('-1', `-${memoryId}`);
+            });
+            
+            container.appendChild(template);
+            
+            // Add navigation bubble
+            const navBubble = document.createElement('div');
+            navBubble.className = 'memory-nav-bubble';
+            navBubble.dataset.memoryId = memoryId;
+            navBubble.innerHTML = `
+                Memory ${memoryId}
+                <span class="remove-memory" onclick="event.stopPropagation(); removeMemory(${memoryId})">×</span>
+            `;
+            navBubble.onclick = () => showMemory(memoryId);
+            
+            // Add to navigation
+            nav.appendChild(navBubble);
+            
+            // Show the new memory
+            showMemory(memoryId);
+        }
+
+        function removeMemory(memoryId) {
+            if (document.querySelectorAll('.memory-container').length > 1) {
+                // Remove memory container
+                const container = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
+                if (container) {
+                    container.remove();
+                }
+                
+                // Remove navigation bubble
+                const navBubble = document.querySelector(`.memory-nav-bubble[data-memory-id="${memoryId}"]`);
+                if (navBubble) {
+                    navBubble.remove();
+                }
+                
+                // Update remaining memory IDs
+                const containers = document.querySelectorAll('.memory-container');
+                const navBubbles = document.querySelectorAll('.memory-nav-bubble:not(.add-memory-bubble)');
+                
+                containers.forEach((container, index) => {
+                    const newId = index + 1;
+                    container.dataset.memoryId = newId;
+                    container.querySelectorAll('[id]').forEach(element => {
+                        element.id = element.id.replace(/-\d+$/, `-${newId}`);
+                    });
+                });
+                
+                navBubbles.forEach((bubble, index) => {
+                    const newId = index + 1;
+                    bubble.dataset.memoryId = newId;
+                    // Update the bubble text based on tags
+                    const container = document.querySelector(`.memory-container[data-memory-id="${newId}"]`);
+                    if (container) {
+                        const tags = Array.from(container.querySelectorAll(`#tags-bubbles-${newId} .memory-bubble`))
+                            .map(bubble => bubble.textContent.trim());
+                        const bubbleText = tags.length > 0 ? tags[0] : `Memory ${newId}`;
+                        bubble.innerHTML = `
+                            ${bubbleText}
+                            <span class="remove-memory" onclick="event.stopPropagation(); removeMemory(${newId})">×</span>
+                        `;
+                    }
+                    bubble.onclick = () => showMemory(newId);
+                });
+                
+                // Show the first memory
+                showMemory(1);
+            } else {
+                alert('You must have at least one memory entry.');
+            }
+        }
+
+        function showMemory(memoryId) {
+            // Hide all memories
+            document.querySelectorAll('.memory-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            // Show selected memory
+            const memory = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
+            if (memory) {
+                memory.classList.add('active');
+            }
+            
+            // Update navigation bubbles
+            document.querySelectorAll('.memory-nav-bubble').forEach(bubble => {
+                bubble.classList.remove('active');
+            });
+            const navBubble = document.querySelector(`.memory-nav-bubble[data-memory-id="${memoryId}"]`);
+            if (navBubble) {
+                navBubble.classList.add('active');
+            }
+        }
+
+        function updateProgress(step) {
+            const steps = document.querySelectorAll('.progress-step');
+            const lines = document.querySelectorAll('.progress-line');
+            
+            steps.forEach((s, index) => {
+                if (index + 1 < step) {
+                    s.classList.add('completed');
+                    s.classList.remove('active');
+                } else if (index + 1 === step) {
+                    s.classList.add('active');
+                    s.classList.remove('completed');
+                } else {
+                    s.classList.remove('active', 'completed');
+                }
+            });
+
+            lines.forEach((l, index) => {
+                if (index + 1 < step) {
+                    l.classList.add('completed');
+                } else {
+                    l.classList.remove('completed');
+                }
+            });
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelector(`.form-section[data-step="${step}"]`).classList.add('active');
+            updateProgress(step);
+        }
+
+        function nextStep(currentStep) {
+            if (validateStep(currentStep)) {
+                showStep(currentStep + 1);
+            }
+        }
+
+        function prevStep(currentStep) {
+            showStep(currentStep - 1);
+        }
+
+        function validateStep(step) {
+            const currentSection = document.querySelector(`.form-section[data-step="${step}"]`);
+            const requiredFields = currentSection.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Please fill in all required fields before proceeding.');
+            }
+
+            return isValid;
+        }
+
+        function addWord(type) {
+            const input = document.getElementById(`${type}-input`);
+            const word = input.value.trim();
+            
+            if (word) {
+                const container = document.getElementById(`${type}-bubbles`);
+                const bubble = document.createElement('div');
+                bubble.className = 'word-bubble';
+                bubble.innerHTML = `
+                    ${word}
+                    <span class="remove-word" onclick="removeWord(this, '${type}')">×</span>
+                `;
+                container.appendChild(bubble);
+                input.value = '';
+                updateHiddenInput(type);
+            }
+        }
+
+        function removeWord(element, type) {
+            element.parentElement.remove();
+            updateHiddenInput(type);
+        }
+
+        function updateHiddenInput(type) {
+            const container = document.getElementById(`${type}-bubbles`);
+            const words = Array.from(container.getElementsByClassName('word-bubble'))
+                .map(bubble => bubble.textContent.trim());
+            document.getElementById(`${type}_words`).value = words.join(',');
+        }
+
+        // Add event listeners for Enter key
+        document.getElementById('vocabulary-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addWord('vocabulary');
+            }
+        });
+
+        document.getElementById('trigger-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addWord('trigger');
+            }
+        });
+
+        document.getElementById('topic-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addWord('topic');
+            }
+        });
+
+        function addMemoryBubble(button, type) {
+            const container = button.closest('.memory-bubbles');
+            const input = container.querySelector('.memory-input');
+            const word = input.value.trim();
+            
+            if (word) {
+                const bubble = document.createElement('div');
+                bubble.className = 'memory-bubble';
+                bubble.innerHTML = `
+                    ${word}
+                    <span class="remove-bubble" onclick="removeMemoryBubble(this)">×</span>
+                `;
+                container.insertBefore(bubble, container.querySelector('.memory-input-container'));
+                input.value = '';
+                updateMemoryHiddenInputs();
+                
+                // Update the memory bubble text if this is a tag
+                if (type === 'tags') {
+                    const memoryId = container.id.split('-')[2];
+                    updateMemoryBubbleText(memoryId);
+                }
+            }
+        }
+
+        function removeMemoryBubble(element) {
+            const container = element.closest('.memory-bubbles');
+            element.parentElement.remove();
+            updateMemoryHiddenInputs();
+            
+            // Update the memory bubble text if this is a tag
+            if (container.id.startsWith('tags-bubbles-')) {
+                const memoryId = container.id.split('-')[2];
+                updateMemoryBubbleText(memoryId);
+            }
+        }
+
+        function updateMemoryHiddenInputs() {
+            document.querySelectorAll('.memory-container').forEach((container, index) => {
+                const tags = Array.from(container.querySelectorAll('#tags-bubbles-' + (index + 1) + ' .memory-bubble'))
+                    .map(bubble => bubble.textContent.trim());
+                const vocabulary = Array.from(container.querySelectorAll('#vocabulary-bubbles-' + (index + 1) + ' .memory-bubble'))
+                    .map(bubble => bubble.textContent.trim());
+                const emotions = Array.from(container.querySelectorAll('#emotion-bubbles-' + (index + 1) + ' .memory-bubble'))
+                    .map(bubble => bubble.textContent.trim());
+                const types = Array.from(container.querySelectorAll('#type-bubbles-' + (index + 1) + ' .memory-bubble'))
+                    .map(bubble => bubble.textContent.trim());
+                
+                // Update hidden inputs or create them if they don't exist
+                ['tags', 'vocabulary', 'emotion', 'type'].forEach(type => {
+                    let input = container.querySelector(`input[name="${type}[]"]`);
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `${type}[]`;
+                        container.appendChild(input);
+                    }
+                    input.value = eval(type).join(',');
+                });
+            });
+        }
+
+        function updateImportanceValue(input) {
+            // Ensure the value is between 0 and 1
+            let value = parseFloat(input.value);
+            if (isNaN(value)) value = 0.8;
+            value = Math.max(0, Math.min(1, value));
+            input.value = value.toFixed(1);
+        }
+
+        // Add event listeners for Enter key in memory inputs
+        document.addEventListener('keypress', function(e) {
+            if (e.target.classList.contains('memory-input') && e.key === 'Enter') {
+                e.preventDefault();
+                const button = e.target.nextElementSibling;
+                addMemoryBubble(button, e.target.closest('.memory-bubbles').id.split('-')[0]);
+            }
+        });
+
+        // Update memory bubble text when tags are added/removed
+        function updateMemoryBubbleText(memoryId) {
+            const container = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
+            if (!container) return;
+            
+            const tags = Array.from(container.querySelectorAll(`#tags-bubbles-${memoryId} .memory-bubble`))
+                .map(bubble => bubble.textContent.trim());
+            const navBubble = document.querySelector(`.memory-nav-bubble[data-memory-id="${memoryId}"]`);
+            if (navBubble) {
+                const bubbleText = tags.length > 0 ? tags[0] : `Memory ${memoryId}`;
+                navBubble.innerHTML = `
+                    ${bubbleText}
+                    <span class="remove-memory" onclick="event.stopPropagation(); removeMemory(${memoryId})">×</span>
+                `;
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (validateStep(3)) {
+                // Simply redirect to chat.html
+                window.location.href = '/chat';
+            }
+        });
+    </script>
+</body>
+</html> 

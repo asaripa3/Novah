@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_file, session
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect
 from flask_cors import CORS
 import sys
 import os
@@ -6,6 +6,8 @@ from pathlib import Path
 from groq import Groq
 from werkzeug.utils import secure_filename
 import time
+import json
+from datetime import datetime
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -92,6 +94,81 @@ def process_chat_message(message, chat_history):
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/care_taker')
+def care_taker():
+    return render_template('care_taker.html')
+
+@app.route('/setup_profile', methods=['POST'])
+def setup_profile():
+    try:
+        # Get JSON data
+        data = request.get_json()
+        
+        # Extract profile data
+        profile_data = {
+            'name': data.get('name'),
+            'mental_age': data.get('mental_age'),
+            'known_vocabulary': data.get('known_vocabulary', '').split(',') if data.get('known_vocabulary') else [],
+            'trigger_words': data.get('trigger_words', '').split(',') if data.get('trigger_words') else [],
+            'preferred_topics': data.get('preferred_topics', '').split(',') if data.get('preferred_topics') else []
+        }
+        
+        # Save profile to JSONL file
+        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
+        with open(profile_path, 'w') as f:
+            json.dump(profile_data, f)
+            f.write('\n')
+        
+        # Process core memories
+        memories = []
+        memory_texts = data.get('memory_text[]', [])
+        tags = data.get('tags[]', [])
+        vocabulary = data.get('vocabulary[]', [])
+        emotions = data.get('emotion[]', [])
+        types = data.get('type[]', [])
+        importance_scores = data.get('memory_importance[]', [])
+        
+        # Convert string lists to actual lists if needed
+        if isinstance(memory_texts, str):
+            memory_texts = [memory_texts]
+        if isinstance(tags, str):
+            tags = [tags]
+        if isinstance(vocabulary, str):
+            vocabulary = [vocabulary]
+        if isinstance(emotions, str):
+            emotions = [emotions]
+        if isinstance(types, str):
+            types = [types]
+        if isinstance(importance_scores, str):
+            importance_scores = [importance_scores]
+        
+        # Create memory objects
+        for i in range(len(memory_texts)):
+            memory = {
+                'id': f'mem_{i+1:03d}',
+                'text': memory_texts[i],
+                'tags': tags[i].split(',') if tags[i] else [],
+                'vocabulary': vocabulary[i].split(',') if vocabulary[i] else [],
+                'emotion': emotions[i].split(',')[0] if emotions[i] else 'neutral',
+                'memory_type': types[i].split(',')[0] if types[i] else 'experience',
+                'importance_score': float(importance_scores[i]) if importance_scores[i] else 0.8,
+                'last_used': datetime.now().strftime('%Y-%m-%d'),
+                'used_count': 1
+            }
+            memories.append(memory)
+        
+        # Save memories to JSONL file
+        memories_path = os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl")
+        with open(memories_path, 'w') as f:
+            for memory in memories:
+                json.dump(memory, f)
+                f.write('\n')
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        print(f"Error in setup_profile: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/chat')
 def chat_page():
