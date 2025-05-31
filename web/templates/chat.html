@@ -32,7 +32,10 @@
                 <a href="/" class="hover:opacity-80 transition-opacity">
                     <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
                 </a>
-                <div class="text-white" id="user-name-display"></div>
+                <a href="/care_taker" class="text-blue-500 hover:text-blue-600 transition-colors flex items-center gap-2 bg-white bg-opacity-10 px-4 py-2 rounded-full" id="user-name-display">
+                    <span class="w-8 h-8 rounded-full bg-black flex items-center justify-center" id="user-emoji-display"></span>
+                    <span id="user-name-text"></span>
+                </a>
             </div>
             <!-- Tab Navigation -->
             <div class="mt-4 flex space-x-1 bg-black bg-opacity-30 rounded-lg p-1">
@@ -128,7 +131,8 @@
             }
             
             // Display user's name in header
-            document.getElementById('user-name-display').textContent = `Welcome, ${userName}`;
+            document.getElementById('user-emoji-display').textContent = userEmoji;
+            document.getElementById('user-name-text').textContent = userName;
             
             // Update welcome message with user's name
             const welcomeMessage = document.getElementById('welcome-message');

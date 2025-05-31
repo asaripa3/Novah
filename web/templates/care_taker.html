@@ -520,7 +520,8 @@
         try {
             profileData = JSON.parse('{{ profile|tojson|safe }}');
             memoriesData = JSON.parse('{{ memories|tojson|safe }}');
-            console.log('memoriesData:', memoriesData); // DEBUG: Show loaded memories
+            console.log('Profile Data:', profileData); // Debug log
+            console.log('Memories Data:', memoriesData); // Debug log
             
             // Immediately initialize memories if data is available
             if (memoriesData && memoriesData.length > 0) {
