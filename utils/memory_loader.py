@@ -17,7 +17,7 @@ def save_core_memories(memories, filepath="data/core_memories.jsonl"):
     try:
         with open(filepath, "w") as f:
             for memory in memories:
-                f.write(json.dumps(memory) + "\n")
+                f.write(json.dumps(memory, ensure_ascii=False) + "\n")
         return True
     except Exception as e:
         return False
