@@ -60,6 +60,24 @@ class PsychiatristAgent:
         self.sia = SentimentIntensityAnalyzer()
         print("NLTK initialization complete!\n")
 
+        self.tool_instructions = {
+            "emotion_analysis": {
+                "description": "Analyze emotional content and context",
+                "usage": "Use to understand emotional state and triggers",
+                "output_format": "Returns emotional analysis with primary and secondary emotions"
+            },
+            "memory_evaluation": {
+                "description": "Evaluate if content should be saved as memory",
+                "usage": "Use to determine memory significance",
+                "output_format": "Returns memory evaluation with significance score"
+            },
+            "vocabulary_analysis": {
+                "description": "Analyze and categorize vocabulary",
+                "usage": "Use to identify meaningful and emotional words",
+                "output_format": "Returns categorized word lists"
+            }
+        }
+
     def _load_memories(self) -> List[Dict]:
         """Load memories from file with error handling."""
         try:
@@ -199,8 +217,52 @@ class PsychiatristAgent:
             json.dump(profile, f)
 
     def _analyze_emotion(self, text: str) -> Dict:
+        """Analyze emotional content of text."""
         print("\n[Emotion Analysis]")
         print(f"Analyzing text: {text}")
+        
+        # Thought process structure
+        thought_process = f"""
+        Thought Process:
+        1. Text Analysis:
+           - Input Text: {text}
+           - Sentiment Scores: To be calculated
+           - Emotional Cues: To be identified
+        
+        2. Emotion Detection:
+           - Primary Emotion: To be determined
+           - Secondary Emotions: To be identified
+           - Emotional Intensity: To be measured
+        
+        3. Context Evaluation:
+           - Triggering Content: To be assessed
+           - Support Needs: To be evaluated
+           - Emotional Impact: To be considered
+        
+        4. Final Integration:
+           - Combine analyses
+           - Structure output
+           - Ensure completeness
+        """
+
+        # Tool usage instructions
+        tool_instructions = """
+        Available Tools:
+        1. Sentiment Analysis Tool:
+           - Purpose: Calculate sentiment scores
+           - Usage: Analyze emotional tone
+           - Output: Sentiment scores and emotional indicators
+
+        2. Emotion Detection Tool:
+           - Purpose: Identify specific emotions
+           - Usage: Determine primary and secondary emotions
+           - Output: List of emotions with intensities
+
+        3. Context Analysis Tool:
+           - Purpose: Evaluate emotional context
+           - Usage: Assess triggering content and support needs
+           - Output: Contextual analysis with recommendations
+        """
         
         # Get sentiment scores
         sentiment_scores = self.sia.polarity_scores(text)
@@ -208,6 +270,8 @@ class PsychiatristAgent:
         
         # Use LLM for detailed emotion analysis
         prompt = (
+            f"{thought_process}\n\n"
+            f"{tool_instructions}\n\n"
             "Analyze the emotional content of this text from a neurodiverse child's perspective. "
             "Consider both explicit and implicit emotions. Return a JSON with:\n"
             "- primary_emotion: The main emotion (e.g., happy, anxious, curious, confused)\n"
@@ -239,26 +303,17 @@ class PsychiatristAgent:
             content = content.strip()
             
             emotion_analysis = json.loads(content)
-            print(f"Emotion analysis result: {emotion_analysis}")
+            print(f"Emotion analysis result: {json.dumps(emotion_analysis, indent=2)}")
             return emotion_analysis
         except json.JSONDecodeError as e:
             print(f"Error parsing emotion analysis JSON: {str(e)}")
             print(f"Raw response: {content}")
-            # Fallback to sentiment analysis
-            compound_score = sentiment_scores['compound']
-            if compound_score > 0.2:
-                primary_emotion = "happy"
-            elif compound_score < -0.2:
-                primary_emotion = "sad"
-            else:
-                primary_emotion = "neutral"
-                
             return {
-                "primary_emotion": primary_emotion,
+                "primary_emotion": "neutral",
                 "secondary_emotions": [],
-                "emotional_intensity": abs(compound_score),
-                "is_triggering": compound_score < -0.5,
-                "needs_support": compound_score < -0.3
+                "emotional_intensity": 0.5,
+                "is_triggering": False,
+                "needs_support": False
             }
 
     def _should_add_to_vocabulary(self, word: str) -> bool:
@@ -338,23 +393,57 @@ class PsychiatristAgent:
             }
 
     def _evaluate_memory(self, text: str, emotion_analysis: Dict, keywords: List[str]) -> Dict:
-        """Use LLM to evaluate if a memory is worth saving and its significance."""
+        """Evaluate if content should be saved as a memory."""
         print("\n[Memory Evaluation]")
-        print(f"Evaluating memory: {text}")
+        print(f"Evaluating text: {text}")
         
-        # Load existing memories for context
-        existing_memories = self._load_memories()
+        # Thought process structure
+        thought_process = f"""
+        Thought Process:
+        1. Content Analysis:
+           - Input Text: {text}
+           - Emotional Context: {emotion_analysis}
+           - Key Concepts: {keywords}
         
+        2. Memory Significance:
+           - Developmental Impact: To be assessed
+           - Emotional Importance: To be evaluated
+           - Future Relevance: To be considered
+        
+        3. Memory Categorization:
+           - Memory Type: To be determined
+           - Significance Score: To be calculated
+           - Reasoning: To be provided
+        
+        4. Final Decision:
+           - Save Decision: To be made
+           - Memory Format: To be determined
+           - Implementation: To be planned
+        """
+
+        # Tool usage instructions
+        tool_instructions = """
+        Available Tools:
+        1. Significance Analysis Tool:
+           - Purpose: Evaluate memory importance
+           - Usage: Assess developmental and emotional impact
+           - Output: Significance score and reasoning
+
+        2. Memory Categorization Tool:
+           - Purpose: Determine memory type
+           - Usage: Classify memory based on content
+           - Output: Memory type and characteristics
+
+        3. Decision Support Tool:
+           - Purpose: Guide memory saving decision
+           - Usage: Evaluate save criteria
+           - Output: Save decision with reasoning
+        """
+
         prompt = (
-            "You are an expert in child psychology and memory formation. "
-            "Evaluate this memory from a neurodiverse child's perspective.\n\n"
-            "Memory: " + text + "\n\n"
-            "Emotional context:\n"
-            f"- Primary emotion: {emotion_analysis['primary_emotion']}\n"
-            f"- Emotional intensity: {emotion_analysis['emotional_intensity']}\n"
-            f"- Is triggering: {emotion_analysis['is_triggering']}\n"
-            f"- Needs support: {emotion_analysis['needs_support']}\n\n"
-            "Keywords: " + ", ".join(keywords) + "\n\n"
+            f"{thought_process}\n\n"
+            f"{tool_instructions}\n\n"
+            "Evaluate if this memory is worth saving and its significance.\n\n"
             "Return a JSON with:\n"
             "- should_save: boolean indicating if this memory is worth saving\n"
             "- significance_score: 0-1 scale of memory importance\n"
@@ -406,34 +495,6 @@ class PsychiatristAgent:
             content = content.strip()
             
             memory_evaluation = json.loads(content)
-            
-            # Additional validation to ensure only truly significant memories are saved
-            if memory_evaluation["should_save"]:
-                # Require higher significance score for saving
-                if memory_evaluation["significance_score"] < 0.7:  # Increased threshold
-                    memory_evaluation["should_save"] = False
-                    memory_evaluation["reasoning"] += " Memory does not meet the minimum significance threshold."
-                
-                # Don't save casual conversations
-                if len(keywords) < 2 and emotion_analysis["emotional_intensity"] < 0.4:
-                    memory_evaluation["should_save"] = False
-                    memory_evaluation["reasoning"] += " Memory appears to be casual conversation without significant emotional or developmental value."
-                
-                # Check for redundancy with existing memories
-                is_redundant = False
-                for existing_memory in existing_memories:
-                    # Check for similar keywords and emotion
-                    keyword_overlap = len(set(keywords) & set(existing_memory["tags"]))
-                    if (keyword_overlap >= 2 and 
-                        existing_memory["emotion"] == emotion_analysis["primary_emotion"] and
-                        existing_memory["memory_type"] == memory_evaluation["memory_type"]):
-                        is_redundant = True
-                        break
-                
-                if is_redundant:
-                    memory_evaluation["should_save"] = False
-                    memory_evaluation["reasoning"] += " Memory appears to be redundant with existing memories."
-            
             print(f"Memory evaluation result: {json.dumps(memory_evaluation, indent=2)}")
             return memory_evaluation
         except json.JSONDecodeError as e:
@@ -469,9 +530,53 @@ class PsychiatristAgent:
         return list(set(word_categories['meaningful_words'] + word_categories['emotional_words']))
 
     def process_input(self, user_input: str, query_result: Dict) -> Dict:
+        """Process user input and update profile/memories accordingly."""
         print("\n[Psychiatrist Agent] Processing new input")
         print(f"User input: {user_input}")
         print(f"Query result: {query_result}")
+
+        # Thought process structure
+        thought_process = f"""
+        Thought Process:
+        1. Input Analysis:
+           - User Input: {user_input}
+           - Query Context: {query_result}
+           - Initial Assessment: To be performed
+        
+        2. Emotional Processing:
+           - Emotion Analysis: To be conducted
+           - Trigger Assessment: To be evaluated
+           - Support Needs: To be determined
+        
+        3. Memory Processing:
+           - Memory Evaluation: To be performed
+           - Vocabulary Analysis: To be conducted
+           - Profile Updates: To be planned
+        
+        4. Final Integration:
+           - Combine analyses
+           - Update profile
+           - Save memories
+        """
+
+        # Tool usage instructions
+        tool_instructions = """
+        Available Tools:
+        1. Emotion Analysis Tool:
+           - Purpose: Understand emotional context
+           - Usage: Analyze emotional content
+           - Output: Emotional analysis with recommendations
+
+        2. Memory Processing Tool:
+           - Purpose: Evaluate and save memories
+           - Usage: Process significant experiences
+           - Output: Memory evaluations and updates
+
+        3. Profile Update Tool:
+           - Purpose: Maintain user profile
+           - Usage: Update preferences and vocabulary
+           - Output: Profile updates and changes
+        """
 
         # Analyze emotion
         emotion_analysis = self._analyze_emotion(user_input)
@@ -487,6 +592,8 @@ class PsychiatristAgent:
         if memory_evaluation["should_save"]:
             # Format the memory text in a personal, first-person narrative style
             prompt = (
+                f"{thought_process}\n\n"
+                f"{tool_instructions}\n\n"
                 "You are an expert in child psychology and memory formation. "
                 "Rewrite this memory from Yahya's perspective, focusing on his feelings and experiences.\n\n"
                 "Original text: " + user_input + "\n\n"
