@@ -97,78 +97,10 @@ def index():
 
 @app.route('/care_taker')
 def care_taker():
-    return render_template('care_taker.html')
-
-@app.route('/setup_profile', methods=['POST'])
-def setup_profile():
-    try:
-        # Get JSON data
-        data = request.get_json()
-        
-        # Extract profile data
-        profile_data = {
-            'name': data.get('name'),
-            'mental_age': data.get('mental_age'),
-            'known_vocabulary': data.get('known_vocabulary', '').split(',') if data.get('known_vocabulary') else [],
-            'trigger_words': data.get('trigger_words', '').split(',') if data.get('trigger_words') else [],
-            'preferred_topics': data.get('preferred_topics', '').split(',') if data.get('preferred_topics') else []
-        }
-        
-        # Save profile to JSONL file
-        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
-        with open(profile_path, 'w') as f:
-            json.dump(profile_data, f)
-            f.write('\n')
-        
-        # Process core memories
-        memories = []
-        memory_texts = data.get('memory_text[]', [])
-        tags = data.get('tags[]', [])
-        vocabulary = data.get('vocabulary[]', [])
-        emotions = data.get('emotion[]', [])
-        types = data.get('type[]', [])
-        importance_scores = data.get('memory_importance[]', [])
-        
-        # Convert string lists to actual lists if needed
-        if isinstance(memory_texts, str):
-            memory_texts = [memory_texts]
-        if isinstance(tags, str):
-            tags = [tags]
-        if isinstance(vocabulary, str):
-            vocabulary = [vocabulary]
-        if isinstance(emotions, str):
-            emotions = [emotions]
-        if isinstance(types, str):
-            types = [types]
-        if isinstance(importance_scores, str):
-            importance_scores = [importance_scores]
-        
-        # Create memory objects
-        for i in range(len(memory_texts)):
-            memory = {
-                'id': f'mem_{i+1:03d}',
-                'text': memory_texts[i],
-                'tags': tags[i].split(',') if tags[i] else [],
-                'vocabulary': vocabulary[i].split(',') if vocabulary[i] else [],
-                'emotion': emotions[i].split(',')[0] if emotions[i] else 'neutral',
-                'memory_type': types[i].split(',')[0] if types[i] else 'experience',
-                'importance_score': float(importance_scores[i]) if importance_scores[i] else 0.8,
-                'last_used': datetime.now().strftime('%Y-%m-%d'),
-                'used_count': 1
-            }
-            memories.append(memory)
-        
-        # Save memories to JSONL file
-        memories_path = os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl")
-        with open(memories_path, 'w') as f:
-            for memory in memories:
-                json.dump(memory, f)
-                f.write('\n')
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        print(f"Error in setup_profile: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)})
+    # Load profile and memories data
+    profile = load_profile(os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl"))
+    memories = load_core_memories(os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl"))
+    return render_template('care_taker.html', profile=profile, memories=memories)
 
 @app.route('/chat')
 def chat_page():
@@ -205,14 +137,12 @@ def chat():
         os.makedirs(os.path.dirname(speech_file_path), exist_ok=True)
         
         try:
-            print(f"Generating speech for response: {response}")
             # Clean up any existing speech file
             if os.path.exists(speech_file_path):
                 try:
                     os.remove(speech_file_path)
-                    print("Removed existing speech file")
                 except Exception as e:
-                    print(f"Error removing existing speech file: {str(e)}")
+                    pass
             
             # Generate new speech file
             speech_response = client.audio.speech.create(
@@ -224,7 +154,6 @@ def chat():
             
             # Use write_to_file method to save the audio
             speech_response.write_to_file(speech_file_path)
-            print(f"Speech file saved to: {speech_file_path}")
             
             # Verify the file was created and is accessible
             if not os.path.exists(speech_file_path):
@@ -240,7 +169,6 @@ def chat():
                 'hasAudio': True
             })
         except Exception as e:
-            print(f"Speech generation error: {str(e)}")
             # Return success with no audio if speech generation fails
             return jsonify({
                 'response': response,
@@ -250,7 +178,6 @@ def chat():
             })
             
     except Exception as e:
-        print(f"Error in chat session: {str(e)}")
         return jsonify({
             'error': str(e),
             'status': 'error'
@@ -259,17 +186,14 @@ def chat():
 @app.route('/api/speech')
 def get_speech():
     speech_file_path = Path(__file__).parent / "static" / "speech.wav"
-    print(f"Serving speech file from: {speech_file_path}")
     
     # Ensure the speech file exists and is accessible
     if not os.path.exists(speech_file_path):
-        print("Speech file not found!")
         return jsonify({'error': 'Speech file not found'}), 404
         
     try:
         # Verify the file is readable
         if not os.access(speech_file_path, os.R_OK):
-            print("Speech file is not readable!")
             return jsonify({'error': 'Speech file is not readable'}), 403
             
         # Read a small portion to verify
@@ -279,19 +203,15 @@ def get_speech():
             
         return send_file(speech_file_path, mimetype='audio/wav')
     except Exception as e:
-        print(f"Error serving speech file: {str(e)}")
         return jsonify({'error': 'Error accessing speech file'}), 500
 
 @app.route('/api/transcribe', methods=['POST'])
 def transcribe_audio():
-    print("Received transcription request")
     if 'audio' not in request.files:
-        print("No audio file in request")
         return jsonify({'error': 'No audio file provided'}), 400
     
     audio_file = request.files['audio']
     if audio_file.filename == '':
-        print("Empty filename")
         return jsonify({'error': 'No selected file'}), 400
     
     try:
@@ -301,11 +221,9 @@ def transcribe_audio():
         # Create a temporary file with a unique name
         temp_filename = f"temp_audio_{int(time.time())}.webm"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
-        print(f"Saving audio to: {filepath}")
         audio_file.save(filepath)
         
         # Transcribe the audio using Groq
-        print("Starting transcription with Groq")
         with open(filepath, "rb") as file:
             transcription = client.audio.transcriptions.create(
                 file=(temp_filename, file.read()),
@@ -314,19 +232,142 @@ def transcribe_audio():
                 response_format="verbose_json",
             )
         
-        print(f"Transcription result: {transcription.text}")
-        
         # Clean up the temporary file
         os.remove(filepath)
-        print("Temporary file cleaned up")
         
         return jsonify({'text': transcription.text})
     except Exception as e:
-        print(f"Error in transcription: {str(e)}")
         # Clean up the temporary file in case of error
         if os.path.exists(filepath):
             os.remove(filepath)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update_profile', methods=['POST'])
+def update_profile():
+    try:
+        data = request.json
+        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
+        memories_path = os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl")
+        
+        # Update profile
+        with open(profile_path, 'w') as f:
+            f.write(json.dumps(data['profile']) + '\n')
+            
+        # Update memories
+        with open(memories_path, 'w') as f:
+            for memory in data['memories']:
+                f.write(json.dumps(memory) + '\n')
+                
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/append_memory', methods=['POST'])
+def append_memory():
+    try:
+        memory = request.json
+        memories_path = os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl")
+        
+        # Append the new memory to the file
+        with open(memories_path, 'a+') as f:
+            f.seek(0, os.SEEK_END)
+            if f.tell() > 0:
+                f.seek(f.tell() - 1)
+                last_char = f.read(1)
+                if last_char != '\n':
+                    f.write('\n')
+            f.write(json.dumps(memory) + '\n')
+        
+        # Reload all memories to ensure consistency
+        memories = load_core_memories(memories_path)
+                
+        return jsonify({
+            'status': 'success',
+            'memories': memories
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/delete_memory', methods=['POST'])
+def delete_memory():
+    try:
+        memory_id = request.json.get('id')
+        memories_path = os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl")
+        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
+
+        # Load all memories
+        memories = load_core_memories(memories_path)
+        # Remove the memory with the given id
+        memories = [m for m in memories if m.get('id') != memory_id]
+        # Write back to file
+        with open(memories_path, 'w') as f:
+            for memory in memories:
+                f.write(json.dumps(memory) + '\n')
+
+        # Load and update profile
+        profile = load_profile(profile_path)
+        # Recompute known_vocabulary, trigger_words, preferred_topics from remaining memories
+        all_vocab = set()
+        all_triggers = set()
+        all_topics = set()
+        for m in memories:
+            all_vocab.update(m.get('vocabulary', []))
+            all_triggers.update(m.get('tags', []))
+            if m.get('memory_type'):
+                all_topics.add(m.get('memory_type'))
+
+        profile['known_vocabulary'] = sorted(list(all_vocab))
+        profile['trigger_words'] = sorted(list(all_triggers))
+        profile['preferred_topics'] = sorted(list(all_topics))
+
+        # Save updated profile
+        with open(profile_path, 'w') as f:
+            f.write(json.dumps(profile) + '\n')
+
+        return jsonify({'status': 'success', 'memories': memories, 'profile': profile})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/delete_profile_word', methods=['POST'])
+def delete_profile_word():
+    try:
+        word = request.json.get('word')
+        type_ = request.json.get('type')
+        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
+        profile = load_profile(profile_path)
+        if type_ == 'vocabulary':
+            profile['known_vocabulary'] = [w for w in profile.get('known_vocabulary', []) if w != word]
+        elif type_ == 'trigger':
+            profile['trigger_words'] = [w for w in profile.get('trigger_words', []) if w != word]
+        elif type_ == 'topic':
+            profile['preferred_topics'] = [w for w in profile.get('preferred_topics', []) if w != word]
+        with open(profile_path, 'w') as f:
+            f.write(json.dumps(profile) + '\n')
+        return jsonify({'status': 'success', 'profile': profile})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/add_profile_word', methods=['POST'])
+def add_profile_word():
+    try:
+        word = request.json.get('word')
+        type_ = request.json.get('type')
+        profile_path = os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl")
+        profile = load_profile(profile_path)
+        if type_ == 'vocabulary':
+            if word not in profile.get('known_vocabulary', []):
+                profile['known_vocabulary'].append(word)
+        elif type_ == 'trigger':
+            if word not in profile.get('trigger_words', []):
+                profile['trigger_words'].append(word)
+        elif type_ == 'topic':
+            if word not in profile.get('preferred_topics', []):
+                profile['preferred_topics'].append(word)
+        with open(profile_path, 'w') as f:
+            f.write(json.dumps(profile) + '\n')
+        return jsonify({'status': 'success', 'profile': profile})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

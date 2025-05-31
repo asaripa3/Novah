@@ -107,11 +107,26 @@
             const name = document.getElementById('name').value.trim();
             
             if (name) {
-                // Store the name and emoji in localStorage
+                // Store user info in localStorage
                 localStorage.setItem('userName', name);
                 localStorage.setItem('userEmoji', currentEmoji);
-                // Redirect to care_taker page
-                window.location.href = '/care_taker';
+                
+                // Redirect to chat page
+                window.location.href = '/chat';
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            const userName = localStorage.getItem('userName');
+            const userEmoji = localStorage.getItem('userEmoji');
+            if (userName) {
+                const nameInput = document.getElementById('name');
+                if (nameInput) nameInput.value = userName;
+            }
+            if (userEmoji) {
+                const preview = document.getElementById('profile-preview');
+                if (preview) preview.textContent = userEmoji;
+                window.currentEmoji = userEmoji;
             }
         });
     </script>

@@ -372,33 +372,70 @@
             transition: all 0.2s;
             border: 1px dashed #3b82f6;
             font-weight: 500;
-            margin-bottom: 1rem;
+            margin-right: 0.5rem;
         }
         .add-memory-bubble:hover {
             background-color: rgba(59, 130, 246, 0.3);
             transform: scale(1.05);
+        }
+        .add-memory-nav-bubble {
+            display: inline-flex;
+            align-items: center;
+            background-color: white;
+            color: #3b82f6;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        .add-memory-nav-bubble:hover {
+            background-color: #f3f4f6;
+            transform: scale(1.05);
+        }
+        .memory-form {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .memory-form.active {
+            display: block;
+        }
+        .memory-form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
-        <a href="/" class="hover:opacity-80 transition-opacity">
-            <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
+        <a href="/chat" class="hover:opacity-80 transition-opacity flex items-center text-blue-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Chat
         </a>
     </header>
 
     <div class="container">
         <div class="profile-container">
-            <h1 class="text-center mb-4">Setting up the user profile</h1>
+            <h1 class="text-center mb-1">Setting up the user profile</h1>
+            <div class="text-center text-sm text-gray-400 mb-4">by Care-taker</div>
             
             <!-- Progress Indicator -->
             <div class="progress-container text-center">
-                <div class="progress-step active" data-step="1">1</div>
+                <div class="progress-step active cursor-pointer" data-step="1" onclick="showStep(1)">1</div>
                 <div class="progress-line"></div>
-                <div class="progress-step" data-step="2">2</div>
+                <div class="progress-step cursor-pointer" data-step="2" onclick="showStep(2)">2</div>
                 <div class="progress-line"></div>
-                <div class="progress-step" data-step="3">3</div>
+                <div class="progress-step cursor-pointer" data-step="3" onclick="showStep(3)">3</div>
             </div>
 
             <form id="profileForm" action="/setup_profile" method="POST">
@@ -429,10 +466,6 @@
                     <div class="word-container">
                         <h4 class="container-title">Known Vocabulary</h4>
                         <div id="vocabulary-bubbles" class="mb-3"></div>
-                        <div class="word-input-container">
-                            <input type="text" class="word-input" id="vocabulary-input" placeholder="Type a word and press Enter">
-                            <button type="button" class="add-word-btn" onclick="addWord('vocabulary')">Add</button>
-                        </div>
                         <input type="hidden" name="known_vocabulary" id="known_vocabulary">
                     </div>
 
@@ -440,10 +473,6 @@
                     <div class="word-container">
                         <h4 class="container-title">Trigger Words</h4>
                         <div id="trigger-bubbles" class="mb-3"></div>
-                        <div class="word-input-container">
-                            <input type="text" class="word-input" id="trigger-input" placeholder="Type a word and press Enter">
-                            <button type="button" class="add-word-btn" onclick="addWord('trigger')">Add</button>
-                        </div>
                         <input type="hidden" name="trigger_words" id="trigger_words">
                     </div>
 
@@ -451,10 +480,6 @@
                     <div class="word-container">
                         <h4 class="container-title">Preferred Topics</h4>
                         <div id="topic-bubbles" class="mb-3"></div>
-                        <div class="word-input-container">
-                            <input type="text" class="word-input" id="topic-input" placeholder="Type a topic and press Enter">
-                            <button type="button" class="add-word-btn" onclick="addWord('topic')">Add</button>
-                        </div>
                         <input type="hidden" name="preferred_topics" id="preferred_topics">
                     </div>
 
@@ -470,65 +495,16 @@
                     
                     <!-- Memory Navigation -->
                     <div class="memory-nav" id="memory-nav">
+                        <!-- Add Memory bubble will be added here by JavaScript -->
                     </div>
 
                     <!-- Memory Containers -->
                     <div id="memories-container">
-                        <div class="memory-container active" data-memory-id="1">
-                            <div class="memory-content">
-                                <textarea class="memory-description" name="memory_text[]" placeholder="Describe a significant memory or experience" required></textarea>
-                                
-                                <div class="memory-bubbles" id="tags-bubbles-1">
-                                    <h5 class="container-title">Tags</h5>
-                                    <div class="memory-input-container">
-                                        <input type="text" class="memory-input" placeholder="Type a tag and press Enter">
-                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'tags')">Add</button>
-                                    </div>
-                                </div>
-
-                                <div class="memory-bubbles" id="vocabulary-bubbles-1">
-                                    <h5 class="container-title">Vocabulary</h5>
-                                    <div class="memory-input-container">
-                                        <input type="text" class="memory-input" placeholder="Type a word and press Enter">
-                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'vocabulary')">Add</button>
-                                    </div>
-                                </div>
-
-                                <div class="memory-bubbles" id="emotion-bubbles-1">
-                                    <h5 class="container-title">Emotions</h5>
-                                    <div class="memory-input-container">
-                                        <input type="text" class="memory-input" placeholder="Type an emotion and press Enter">
-                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'emotion')">Add</button>
-                                    </div>
-                                </div>
-
-                                <div class="memory-bubbles" id="type-bubbles-1">
-                                    <h5 class="container-title">Memory Type</h5>
-                                    <div class="memory-input-container">
-                                        <input type="text" class="memory-input" placeholder="Type a memory type (e.g., media, experience, location)" required>
-                                        <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'type')">Add</button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h5 class="container-title">Importance Score</h5>
-                                    <input type="number" class="importance-input" min="0" max="1" step="0.1" value="0.8" 
-                                           oninput="updateImportanceValue(this)" name="memory_importance[]">
-                                    <div class="text-sm text-gray-400">Enter a value between 0 and 1 (e.g., 0.8)</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="add-memory-bubble" onclick="addMemoryEntry()">
-                            + Add Another Memory
-                        </div>
+                        <!-- Memory containers will be added here by JavaScript -->
                     </div>
 
                     <div class="wizard-nav">
                         <button type="button" class="btn btn-secondary" onclick="prevStep(3)">Previous</button>
-                        <button type="submit" class="btn btn-primary btn-lg">Create Profile</button>
                     </div>
                 </div>
             </form>
@@ -537,6 +513,305 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Initialize data from server
+        let profileData;
+        let memoriesData;
+        
+        try {
+            profileData = JSON.parse('{{ profile|tojson|safe }}');
+            memoriesData = JSON.parse('{{ memories|tojson|safe }}');
+            console.log('memoriesData:', memoriesData); // DEBUG: Show loaded memories
+            
+            // Immediately initialize memories if data is available
+            if (memoriesData && memoriesData.length > 0) {
+                initializeMemories(memoriesData);
+            }
+        } catch (error) {
+            console.error('Error parsing data:', error);
+        }
+        
+        function initializeMemories(memories) {
+            // Clear existing memory containers
+            const memoriesContainer = document.getElementById('memories-container');
+            const memoryNav = document.getElementById('memory-nav');
+            
+            if (!memoriesContainer || !memoryNav) {
+                console.error('Memory containers not found!');
+                return;
+            }
+            
+            memoriesContainer.innerHTML = '';
+            memoryNav.innerHTML = '';
+            
+            // Add the "Add Memory" bubble first
+            const addMemoryBubble = document.createElement('div');
+            addMemoryBubble.className = 'add-memory-nav-bubble';
+            addMemoryBubble.innerHTML = '+ Add Memory';
+            addMemoryBubble.onclick = showAddMemoryForm;
+            memoryNav.appendChild(addMemoryBubble);
+            
+            // Add the memory form container
+            const memoryForm = document.createElement('div');
+            memoryForm.className = 'memory-form';
+            memoryForm.id = 'add-memory-form';
+            memoryForm.innerHTML = `
+                <div class="memory-content">
+                    <textarea class="memory-description" id="new-memory-text" placeholder="Describe a significant memory or experience" required></textarea>
+                    
+                    <div class="memory-bubbles" id="new-tags-bubbles">
+                        <h5 class="container-title">Tags</h5>
+                        <div class="memory-input-container">
+                            <input type="text" class="memory-input" placeholder="Type a tag and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addNewMemoryBubble(this, 'tags')">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="memory-bubbles" id="new-vocabulary-bubbles">
+                        <h5 class="container-title">Vocabulary</h5>
+                        <div class="memory-input-container">
+                            <input type="text" class="memory-input" placeholder="Type a word and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addNewMemoryBubble(this, 'vocabulary')">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="memory-bubbles" id="new-emotion-bubbles">
+                        <h5 class="container-title">Emotions</h5>
+                        <div class="memory-input-container">
+                            <input type="text" class="memory-input" placeholder="Type an emotion and press Enter">
+                            <button type="button" class="add-word-btn" onclick="addNewMemoryBubble(this, 'emotion')">Add</button>
+                        </div>
+                    </div>
+
+                    <div class="memory-bubbles" id="new-type-bubbles">
+                        <h5 class="container-title">Memory Type</h5>
+                        <div class="memory-input-container">
+                            <input type="text" class="memory-input" placeholder="Type a memory type (e.g., media, experience, location)">
+                            <button type="button" class="add-word-btn" onclick="addNewMemoryBubble(this, 'type')">Add</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h5 class="container-title">Importance Score</h5>
+                        <input type="number" class="importance-input" id="new-importance" min="0" max="1" step="0.1" value="0.8" 
+                               oninput="updateImportanceValue(this)">
+                        <div class="text-sm text-gray-400">Enter a value between 0 and 1 (e.g., 0.8)</div>
+                    </div>
+
+                    <div class="memory-form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="hideAddMemoryForm()">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="saveNewMemory()">Save Memory</button>
+                    </div>
+                </div>
+            `;
+            memoriesContainer.appendChild(memoryForm);
+            
+            memories.forEach((memory, index) => {
+                // Create memory container
+                const container = document.createElement('div');
+                container.className = 'memory-container' + (index === 0 ? ' active' : '');
+                container.dataset.memoryId = index + 1;
+                container.style.display = index === 0 ? 'block' : 'none';
+                
+                // Create memory content
+                container.innerHTML = `
+                    <div class="memory-content">
+                        <textarea class="memory-description" name="memory_text[]" placeholder="Describe a significant memory or experience" required>${memory.text || ''}</textarea>
+                        
+                        <div class="memory-bubbles" id="tags-bubbles-${index + 1}">
+                            <h5 class="container-title">Tags</h5>
+                            <div class="memory-input-container">
+                                <input type="text" class="memory-input" placeholder="Type a tag and press Enter">
+                                <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'tags')">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="memory-bubbles" id="vocabulary-bubbles-${index + 1}">
+                            <h5 class="container-title">Vocabulary</h5>
+                            <div class="memory-input-container">
+                                <input type="text" class="memory-input" placeholder="Type a word and press Enter">
+                                <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'vocabulary')">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="memory-bubbles" id="emotion-bubbles-${index + 1}">
+                            <h5 class="container-title">Emotions</h5>
+                            <div class="memory-input-container">
+                                <input type="text" class="memory-input" placeholder="Type an emotion and press Enter">
+                                <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'emotion')">Add</button>
+                            </div>
+                        </div>
+
+                        <div class="memory-bubbles" id="type-bubbles-${index + 1}">
+                            <h5 class="container-title">Memory Type</h5>
+                            <div class="memory-input-container">
+                                <input type="text" class="memory-input" placeholder="Type a memory type (e.g., media, experience, location)">
+                                <button type="button" class="add-word-btn" onclick="addMemoryBubble(this, 'type')">Add</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h5 class="container-title">Importance Score</h5>
+                            <input type="number" class="importance-input" min="0" max="1" step="0.1" value="${memory.importance_score || 0.8}" 
+                                   oninput="updateImportanceValue(this)" name="memory_importance[]">
+                            <div class="text-sm text-gray-400">Enter a value between 0 and 1 (e.g., 0.8)</div>
+                        </div>
+                    </div>
+                `;
+                
+                memoriesContainer.appendChild(container);
+                
+                // Create navigation bubble
+                const navBubble = document.createElement('div');
+                navBubble.className = 'memory-nav-bubble' + (index === 0 ? ' active' : '');
+                navBubble.dataset.memoryId = index + 1;
+                const bubbleText = memory.tags && memory.tags.length > 0 ? memory.tags[0] : `Memory ${index + 1}`;
+                navBubble.innerHTML = `
+                    ${bubbleText}
+                    <span class="remove-memory" onclick="event.stopPropagation(); removeMemory(${index + 1})">×</span>
+                `;
+                navBubble.onclick = () => showMemory(index + 1);
+                memoryNav.appendChild(navBubble);
+                
+                // Populate memory bubbles
+                if (memory.tags) {
+                    populateMemoryBubbles(container, 'tags', memory.tags);
+                }
+                if (memory.vocabulary) {
+                    populateMemoryBubbles(container, 'vocabulary', memory.vocabulary);
+                }
+                if (memory.emotion) {
+                    populateMemoryBubbles(container, 'emotion', [memory.emotion]);
+                }
+                if (memory.memory_type) {
+                    populateMemoryBubbles(container, 'type', [memory.memory_type]);
+                }
+            });
+        }
+        
+        // Wait for DOM to be fully loaded
+        window.addEventListener('load', function() {
+            try {
+                // Basic Information
+                const nameInput = document.getElementById('name');
+                const mentalAgeInput = document.getElementById('mental_age');
+                
+                if (nameInput && profileData) {
+                    nameInput.value = profileData.name || '';
+                }
+                
+                if (mentalAgeInput && profileData) {
+                    mentalAgeInput.value = profileData.mental_age || '';
+                }
+                
+                // Vocabulary and Triggers
+                if (profileData && profileData.known_vocabulary) {
+                    populateWordBubbles('vocabulary', profileData.known_vocabulary);
+                }
+                
+                if (profileData && profileData.trigger_words) {
+                    populateWordBubbles('trigger', profileData.trigger_words);
+                }
+                
+                if (profileData && profileData.preferred_topics) {
+                    populateWordBubbles('topic', profileData.preferred_topics);
+                }
+                
+                // Core Memories
+                if (memoriesData && memoriesData.length > 0) {
+                    initializeMemories(memoriesData);
+                }
+                
+                // Show first step by default
+                showStep(1);
+                
+            } catch (error) {
+                console.error('Error initializing form:', error);
+            }
+        });
+        
+        function populateWordBubbles(type, words) {
+            const container = document.getElementById(`${type}-bubbles`);
+            if (!container) {
+                console.error(`Container not found for ${type}. Looking for element with id: ${type}-bubbles`);
+                return;
+            }
+            
+            // Clear existing bubbles first
+            container.innerHTML = '';
+            
+            // Add input container
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'word-input-container';
+            inputContainer.innerHTML = `
+                <input type="text" class="word-input" id="${type}-input" placeholder="Type a word and press Enter">
+                <button type="button" class="add-word-btn" onclick="addWord('${type}')">Add</button>
+            `;
+            
+            // Add bubbles
+            words.forEach(word => {
+                if (word && word.trim()) {  // Only add non-empty words
+                    const bubble = document.createElement('div');
+                    bubble.className = 'word-bubble';
+                    bubble.innerHTML = `
+                        ${word.trim()}
+                        <span class="remove-word" onclick="removeWord(this, '${type}')">×</span>
+                    `;
+                    container.appendChild(bubble);
+                }
+            });
+            
+            // Add input container after bubbles
+            container.appendChild(inputContainer);
+            
+            // Add event listener for Enter key
+            const input = container.querySelector(`#${type}-input`);
+            if (input) {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addWord(type);
+                    }
+                });
+            }
+            
+            updateHiddenInput(type);
+        }
+        
+        function populateMemoryBubbles(container, type, items) {
+            const bubblesContainer = container.querySelector(`#${type}-bubbles-${container.dataset.memoryId}`);
+            if (!bubblesContainer) {
+                console.error(`Bubbles container not found for ${type}`);
+                return;
+            }
+            
+            // Clear existing bubbles except the input container
+            const inputContainer = bubblesContainer.querySelector('.memory-input-container');
+            bubblesContainer.innerHTML = '';
+            if (inputContainer) {
+                bubblesContainer.appendChild(inputContainer);
+            }
+            
+            // Add bubbles
+            items.forEach(item => {
+                if (item && item.trim()) {  // Only add non-empty items
+                    const bubble = document.createElement('div');
+                    bubble.className = 'memory-bubble';
+                    bubble.innerHTML = `
+                        ${item.trim()}
+                        <span class="remove-bubble" onclick="removeMemoryBubble(this)">×</span>
+                    `;
+                    bubblesContainer.insertBefore(bubble, inputContainer);
+                }
+            });
+        }
+
+        function updateAllMemoryBubbles() {
+            document.querySelectorAll('.memory-container').forEach(container => {
+                const memoryId = container.dataset.memoryId;
+                updateMemoryBubbleText(memoryId);
+            });
+        }
+
         function addMemoryEntry() {
             const container = document.getElementById('memories-container');
             const nav = document.getElementById('memory-nav');
@@ -581,65 +856,50 @@
         }
 
         function removeMemory(memoryId) {
-            if (document.querySelectorAll('.memory-container').length > 1) {
-                // Remove memory container
-                const container = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
-                if (container) {
-                    container.remove();
+            // Find the memory object by id
+            let memory = memoriesData.find(m => m.id === memoryId || m.id === `mem_${String(memoryId).padStart(3, '0')}`);
+            if (!memory) return;
+
+            if (!confirm('Are you sure you want to delete this memory?')) return;
+
+            fetch('/api/delete_memory', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: memory.id })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    memoriesData = data.memories;
+                    profileData = data.profile;
+                    initializeMemories(memoriesData);
+                    // Optionally update profile UI if needed
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    successMessage.textContent = 'Memory deleted successfully!';
+                    document.body.appendChild(successMessage);
+                    setTimeout(() => { successMessage.remove(); }, 3000);
+                } else {
+                    alert('Error deleting memory: ' + data.message);
                 }
-                
-                // Remove navigation bubble
-                const navBubble = document.querySelector(`.memory-nav-bubble[data-memory-id="${memoryId}"]`);
-                if (navBubble) {
-                    navBubble.remove();
-                }
-                
-                // Update remaining memory IDs
-                const containers = document.querySelectorAll('.memory-container');
-                const navBubbles = document.querySelectorAll('.memory-nav-bubble:not(.add-memory-bubble)');
-                
-                containers.forEach((container, index) => {
-                    const newId = index + 1;
-                    container.dataset.memoryId = newId;
-                    container.querySelectorAll('[id]').forEach(element => {
-                        element.id = element.id.replace(/-\d+$/, `-${newId}`);
-                    });
-                });
-                
-                navBubbles.forEach((bubble, index) => {
-                    const newId = index + 1;
-                    bubble.dataset.memoryId = newId;
-                    // Update the bubble text based on tags
-                    const container = document.querySelector(`.memory-container[data-memory-id="${newId}"]`);
-                    if (container) {
-                        const tags = Array.from(container.querySelectorAll(`#tags-bubbles-${newId} .memory-bubble`))
-                            .map(bubble => bubble.textContent.trim());
-                        const bubbleText = tags.length > 0 ? tags[0] : `Memory ${newId}`;
-                        bubble.innerHTML = `
-                            ${bubbleText}
-                            <span class="remove-memory" onclick="event.stopPropagation(); removeMemory(${newId})">×</span>
-                        `;
-                    }
-                    bubble.onclick = () => showMemory(newId);
-                });
-                
-                // Show the first memory
-                showMemory(1);
-            } else {
-                alert('You must have at least one memory entry.');
-            }
+            })
+            .catch(error => {
+                alert('Error deleting memory: ' + error);
+            });
         }
 
         function showMemory(memoryId) {
             // Hide all memories
             document.querySelectorAll('.memory-container').forEach(container => {
                 container.classList.remove('active');
+                container.style.display = 'none';
             });
             
             // Show selected memory
             const memory = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
             if (memory) {
                 memory.classList.add('active');
+                memory.style.display = 'block';
             }
             
             // Update navigation bubbles
@@ -681,7 +941,18 @@
             document.querySelectorAll('.form-section').forEach(section => {
                 section.classList.remove('active');
             });
-            document.querySelector(`.form-section[data-step="${step}"]`).classList.add('active');
+            const targetSection = document.querySelector(`.form-section[data-step="${step}"]`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                
+                // If this is step 3 (Core Memories), make sure the first memory is visible
+                if (step === 3) {
+                    const firstMemory = document.querySelector('.memory-container');
+                    if (firstMemory) {
+                        firstMemory.classList.add('active');
+                    }
+                }
+            }
             updateProgress(step);
         }
 
@@ -697,17 +968,41 @@
 
         function validateStep(step) {
             const currentSection = document.querySelector(`.form-section[data-step="${step}"]`);
-            const requiredFields = currentSection.querySelectorAll('[required]');
             let isValid = true;
 
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('is-invalid');
-                    isValid = false;
-                } else {
-                    field.classList.remove('is-invalid');
-                }
-            });
+            if (step === 3) {
+                // Special validation for memories
+                const memoryContainers = currentSection.querySelectorAll('.memory-container');
+                memoryContainers.forEach((container, index) => {
+                    const text = container.querySelector('.memory-description').value.trim();
+                    const typeBubble = container.querySelector('.type-bubbles .memory-bubble');
+                    
+                    if (!text) {
+                        container.querySelector('.memory-description').classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        container.querySelector('.memory-description').classList.remove('is-invalid');
+                    }
+                    
+                    if (!typeBubble) {
+                        container.querySelector('.type-bubbles').classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        container.querySelector('.type-bubbles').classList.remove('is-invalid');
+                    }
+                });
+            } else {
+                // Regular validation for other steps
+                const requiredFields = currentSection.querySelectorAll('[required]');
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('is-invalid');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('is-invalid');
+                    }
+                });
+            }
 
             if (!isValid) {
                 alert('Please fill in all required fields before proceeding.');
@@ -719,7 +1014,6 @@
         function addWord(type) {
             const input = document.getElementById(`${type}-input`);
             const word = input.value.trim();
-            
             if (word) {
                 const container = document.getElementById(`${type}-bubbles`);
                 const bubble = document.createElement('div');
@@ -731,42 +1025,69 @@
                 container.appendChild(bubble);
                 input.value = '';
                 updateHiddenInput(type);
+                // Send update to backend to add the word to the profile
+                fetch('/api/add_profile_word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ word: word, type: type })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        profileData = data.profile;
+                        const successMessage = document.createElement('div');
+                        successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                        successMessage.textContent = 'Profile updated successfully!';
+                        document.body.appendChild(successMessage);
+                        setTimeout(() => { successMessage.remove(); }, 3000);
+                    } else {
+                        alert('Error updating profile: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error updating profile: ' + error);
+                });
             }
         }
 
         function removeWord(element, type) {
+            if (!confirm('Are you sure you want to delete this word from the profile?')) return;
+            const word = element.parentElement.childNodes[0]?.textContent.trim() || '';
             element.parentElement.remove();
             updateHiddenInput(type);
+            // Send update to backend to remove the word from the profile
+            fetch('/api/delete_profile_word', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ word: word, type: type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    profileData = data.profile;
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    successMessage.textContent = 'Profile updated successfully!';
+                    document.body.appendChild(successMessage);
+                    setTimeout(() => { successMessage.remove(); }, 3000);
+                } else {
+                    alert('Error updating profile: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error updating profile: ' + error);
+            });
         }
 
         function updateHiddenInput(type) {
             const container = document.getElementById(`${type}-bubbles`);
             const words = Array.from(container.getElementsByClassName('word-bubble'))
                 .map(bubble => bubble.textContent.trim());
-            document.getElementById(`${type}_words`).value = words.join(',');
+            const hiddenInput = document.getElementById(`${type}_words`);
+            if (hiddenInput) {
+                hiddenInput.value = words.join(',');
+            }
         }
-
-        // Add event listeners for Enter key
-        document.getElementById('vocabulary-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addWord('vocabulary');
-            }
-        });
-
-        document.getElementById('trigger-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addWord('trigger');
-            }
-        });
-
-        document.getElementById('topic-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addWord('topic');
-            }
-        });
 
         function addMemoryBubble(button, type) {
             const container = button.closest('.memory-bubbles');
@@ -837,15 +1158,6 @@
             input.value = value.toFixed(1);
         }
 
-        // Add event listeners for Enter key in memory inputs
-        document.addEventListener('keypress', function(e) {
-            if (e.target.classList.contains('memory-input') && e.key === 'Enter') {
-                e.preventDefault();
-                const button = e.target.nextElementSibling;
-                addMemoryBubble(button, e.target.closest('.memory-bubbles').id.split('-')[0]);
-            }
-        });
-
         // Update memory bubble text when tags are added/removed
         function updateMemoryBubbleText(memoryId) {
             const container = document.querySelector(`.memory-container[data-memory-id="${memoryId}"]`);
@@ -863,12 +1175,139 @@
             }
         }
 
+        function showAddMemoryForm() {
+            const form = document.getElementById('add-memory-form');
+            if (form) {
+                form.classList.add('active');
+                // Hide all other memory containers
+                document.querySelectorAll('.memory-container').forEach(container => {
+                    container.style.display = 'none';
+                });
+            }
+        }
+
+        function hideAddMemoryForm() {
+            const form = document.getElementById('add-memory-form');
+            if (form) {
+                form.classList.remove('active');
+                // Clear form fields
+                form.querySelectorAll('input[type="text"], textarea').forEach(input => {
+                    input.value = '';
+                });
+                form.querySelector('.importance-input').value = '0.8';
+                // Clear all bubbles
+                form.querySelectorAll('.memory-bubble').forEach(bubble => {
+                    bubble.remove();
+                });
+                // Show the first memory
+                showMemory(1);
+            }
+        }
+
+        function addNewMemoryBubble(button, type) {
+            const container = button.closest('.memory-bubbles');
+            const input = container.querySelector('.memory-input');
+            const word = input.value.trim();
+            
+            if (word) {
+                const bubble = document.createElement('div');
+                bubble.className = 'memory-bubble';
+                bubble.innerHTML = `
+                    ${word}
+                    <span class="remove-bubble" onclick="removeMemoryBubble(this)">×</span>
+                `;
+                container.insertBefore(bubble, container.querySelector('.memory-input-container'));
+                input.value = '';
+            }
+        }
+
+        function saveNewMemory() {
+            const form = document.getElementById('add-memory-form');
+            if (!form) return;
+
+            // Validate required fields
+            const text = form.querySelector('#new-memory-text').value.trim();
+            const typeBubble = form.querySelector('#new-type-bubbles .memory-bubble');
+            
+            if (!text) {
+                form.querySelector('#new-memory-text').classList.add('is-invalid');
+                alert('Please fill in the memory description');
+                return;
+            }
+            
+            if (!typeBubble) {
+                form.querySelector('#new-type-bubbles').classList.add('is-invalid');
+                alert('Please add a memory type');
+                return;
+            }
+
+            // Collect memory data
+            const memory = {
+                id: `mem_${String(document.querySelectorAll('.memory-container').length + 1).padStart(3, '0')}`,
+                text: text,
+                tags: Array.from(form.querySelectorAll('#new-tags-bubbles .memory-bubble'))
+                    .map(bubble => bubble.childNodes[0]?.textContent.trim() || ''),
+                vocabulary: Array.from(form.querySelectorAll('#new-vocabulary-bubbles .memory-bubble'))
+                    .map(bubble => bubble.childNodes[0]?.textContent.trim() || ''),
+                emotion: form.querySelector('#new-emotion-bubbles .memory-bubble')?.childNodes[0]?.textContent.trim() || '',
+                memory_type: form.querySelector('#new-type-bubbles .memory-bubble')?.childNodes[0]?.textContent.trim() || '',
+                importance_score: parseFloat(form.querySelector('#new-importance').value),
+                last_used: new Date().toISOString().split('T')[0],
+                used_count: 1
+            };
+
+            // Save the memory to the server
+            fetch('/api/append_memory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(memory)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update memories array with the server response
+                    memoriesData = data.memories;
+                    
+                    // Reinitialize the memories UI
+                    initializeMemories(memoriesData);
+
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    successMessage.textContent = 'Memory saved successfully!';
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove success message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.remove();
+                    }, 3000);
+
+                    // Hide form and show the last memory
+                    hideAddMemoryForm();
+                    showMemory(memoriesData.length);
+                } else {
+                    throw new Error(data.message || 'Failed to save memory');
+                }
+            })
+            .catch(error => {
+                // Show error message
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                errorMessage.textContent = 'Error saving memory: ' + error.message;
+                document.body.appendChild(errorMessage);
+                
+                // Remove error message after 5 seconds
+                setTimeout(() => {
+                    errorMessage.remove();
+                }, 5000);
+            });
+        }
+
         document.getElementById('profileForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            if (validateStep(3)) {
-                // Simply redirect to chat.html
-                window.location.href = '/chat';
-            }
+            window.location.href = '/chat';
         });
     </script>
 </body>

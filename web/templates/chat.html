@@ -27,21 +27,17 @@
         </div>
 
         <!-- Header -->
-        <header class="header-bar px-8 py-5 flex flex-col items-center justify-between shadow-md sticky top-0 z-10">
-            <div class="w-full flex items-center justify-between">
-                <a href="/" class="hover:opacity-80 transition-opacity">
-                    <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
+        <header class="header-bar px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-10">
+            <a href="/" class="hover:opacity-80 transition-opacity flex items-center text-blue-500">
+                <h1 class="text-2xl md:text-3xl font-bold text-blue-500 tracking-tight">NovahSpeaks</h1>
+            </a>
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center text-2xl">
+                    <span id="user-emoji" role="img" aria-label="user">👤</span>
+                </div>
+                <a href="/care_taker" class="font-semibold text-blue-500 text-lg" id="user-name-header-link">
+                    <span id="user-name-header"></span>
                 </a>
-                <div class="text-white" id="user-name-display"></div>
-            </div>
-            <!-- Tab Navigation -->
-            <div class="mt-4 flex space-x-1 bg-black bg-opacity-30 rounded-lg p-1">
-                <button id="chat-tab" class="px-4 py-2 rounded-md text-white font-medium transition-all active-tab">
-                    Chat
-                </button>
-                <button id="play-tab" class="px-4 py-2 rounded-md text-white font-medium transition-all">
-                    Play (beta)
-                </button>
             </div>
         </header>
 
@@ -128,7 +124,7 @@
             }
             
             // Display user's name in header
-            document.getElementById('user-name-display').textContent = `Welcome, ${userName}`;
+            document.getElementById('user-name-header').textContent = userName;
             
             // Update welcome message with user's name
             const welcomeMessage = document.getElementById('welcome-message');
@@ -669,6 +665,12 @@
                     updateMascotEmoji('🌟'); // Return to idle state on error
                 }
             });
+
+            // Update user emoji and name
+            const userEmojiSpan = document.getElementById('user-emoji');
+            if (userEmojiSpan) userEmojiSpan.textContent = userEmoji;
+            const userNameSpan = document.getElementById('user-name-header');
+            if (userNameSpan) userNameSpan.textContent = userName;
         });
     </script>
     <style>
