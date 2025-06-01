@@ -1,0 +1,18 @@
+version: 1
+backend:
+  phases:
+    build:
+      commands:
+        - pip install -r requirements.txt
+frontend:
+  phases:
+    build:
+      commands:
+        - python web/app.py
+  artifacts:
+    baseDirectory: web
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/* 

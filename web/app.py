@@ -251,12 +251,12 @@ def update_profile():
         
         # Update profile
         with open(profile_path, 'w') as f:
-            f.write(json.dumps(data['profile'], ensure_ascii=False) + '\n')
+            f.write(json.dumps(data['profile'], ensure_ascii=False).replace('\\/', '/') + '\n')
             
         # Update memories
         with open(memories_path, 'w') as f:
             for memory in data['memories']:
-                f.write(json.dumps(memory, ensure_ascii=False) + '\n')
+                f.write(json.dumps(memory, ensure_ascii=False).replace('\\/', '/') + '\n')
                 
         return jsonify({'status': 'success'})
     except Exception as e:
@@ -276,7 +276,7 @@ def append_memory():
                 last_char = f.read(1)
                 if last_char != '\n':
                     f.write('\n')
-            f.write(json.dumps(memory, ensure_ascii=False) + '\n')
+            f.write(json.dumps(memory, ensure_ascii=False).replace('\\/', '/') + '\n')
         
         # Reload all memories to ensure consistency
         memories = load_core_memories(memories_path)
@@ -302,7 +302,7 @@ def delete_memory():
         # Write back to file
         with open(memories_path, 'w') as f:
             for memory in memories:
-                f.write(json.dumps(memory, ensure_ascii=False) + '\n')
+                f.write(json.dumps(memory, ensure_ascii=False).replace('\\/', '/') + '\n')
 
         # Load and update profile
         profile = load_profile(profile_path)
@@ -322,7 +322,7 @@ def delete_memory():
 
         # Save updated profile
         with open(profile_path, 'w') as f:
-            f.write(json.dumps(profile, ensure_ascii=False) + '\n')
+            f.write(json.dumps(profile, ensure_ascii=False).replace('\\/', '/') + '\n')
 
         return jsonify({'status': 'success', 'memories': memories, 'profile': profile})
     except Exception as e:
@@ -342,7 +342,7 @@ def delete_profile_word():
         elif type_ == 'topic':
             profile['preferred_topics'] = [w for w in profile.get('preferred_topics', []) if w != word]
         with open(profile_path, 'w') as f:
-            f.write(json.dumps(profile, ensure_ascii=False) + '\n')
+            f.write(json.dumps(profile, ensure_ascii=False).replace('\\/', '/') + '\n')
         return jsonify({'status': 'success', 'profile': profile})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
@@ -364,7 +364,7 @@ def add_profile_word():
             if word not in profile.get('preferred_topics', []):
                 profile['preferred_topics'].append(word)
         with open(profile_path, 'w') as f:
-            f.write(json.dumps(profile, ensure_ascii=False) + '\n')
+            f.write(json.dumps(profile, ensure_ascii=False).replace('\\/', '/') + '\n')
         return jsonify({'status': 'success', 'profile': profile})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)}), 500
