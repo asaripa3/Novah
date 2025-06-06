@@ -1,5 +1,5 @@
 # NovahSpeaks
-
+# Visit [NovahSpeaks](https://13.58.115.238/) for a live demo.
 ![NovahSpeaks Overview](Demo/overview.png)
 
 NovahSpeaks is an AI-powered chat application designed to provide a supportive and engaging conversation experience. The application features a modern, user-friendly interface with both text and voice interaction capabilities.
