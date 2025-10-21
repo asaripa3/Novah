@@ -1,7 +1,10 @@
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+# Load environment from project root
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(PROJECT_ROOT, ".env")
+load_dotenv(dotenv_path=env_path)
 
 def get_llm_config():
     return {

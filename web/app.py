@@ -32,12 +32,17 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key = os.urandom(24)  # Required for session
 
-# Load environment variables
-load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
-
-# Get the project root directory
+# Load environment variables from project root explicitly
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+env_path = os.path.join(PROJECT_ROOT, ".env")
+load_dotenv(dotenv_path=env_path)
+groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    raise RuntimeError(
+        "GROQ_API_KEY is not set. Ensure .env exists at project root or the environment variable is configured."
+    )
+
+# Get the project root directory (already defined above)
 
 # Initialize agents with correct file paths
 profile = load_profile(os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl"))

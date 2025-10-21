@@ -11,8 +11,15 @@ from engine.chat_loop import run_chat_session
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment variables from project root explicitly
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(PROJECT_ROOT, ".env")
+load_dotenv(dotenv_path=env_path)
 groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    raise RuntimeError(
+        "GROQ_API_KEY is not set. Ensure .env exists at project root or the environment variable is configured."
+    )
 
 profile = load_profile("data/yahya_profile.jsonl")
 
