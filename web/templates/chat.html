@@ -7,6 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='Mascot/idle.png') }}">
 </head>
 <body class="h-full w-full chat-page">
     <div class="main-card flex flex-col h-full w-full rounded-none shadow-none border-0">
@@ -508,6 +509,14 @@
                 if (!isRecording) {
                     console.log('Starting recording in Play mode...');
                     try {
+                        if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                            console.error('getUserMedia unavailable: insecure context or unsupported browser');
+                            alert('Microphone requires HTTPS (or localhost). Please use https:// or try a modern browser.');
+                            isProcessing = false;
+                            updateMicButtonState();
+                            updateMascotEmoji('🌟');
+                            return;
+                        }
                         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                         
                         // Check for supported MIME types

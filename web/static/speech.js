@@ -20,6 +20,11 @@ document.getElementById('mic-button').addEventListener('click', async () => {
     if (!isRecording) {
         console.log('Starting recording...');
         try {
+            if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.error('getUserMedia unavailable: insecure context or unsupported browser');
+                alert('Microphone requires HTTPS (or localhost). Please use https:// or try a modern browser.');
+                return;
+            }
             stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             console.log('Microphone access granted');
             mediaRecorder = new MediaRecorder(stream, {
