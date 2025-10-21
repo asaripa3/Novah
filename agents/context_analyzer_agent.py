@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger('ContextAnalyzer')
 
 class ContextAnalyzerAgent:
-    def __init__(self, model="llama-3.1-70b-versatile", api_key=None, base_url=None):
+    def __init__(self, model="llama-3.3-70b-versatile", api_key=None, base_url=None):
         self.model = model
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         logger.info(f"Initialized ContextAnalyzerAgent with model: {model}")

@@ -42,14 +42,14 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Initialize agents with correct file paths
 profile = load_profile(os.path.join(PROJECT_ROOT, "data", "yahya_profile.jsonl"))
 
-query_agent = QueryParserAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+query_agent = QueryParserAgent(model="llama-3.3-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 memory_agent = MemoryRetrievalAgent(memory_file=os.path.join(PROJECT_ROOT, "data", "core_memories.jsonl"))
 context_agent = ContextFilterAgent(known_vocabulary=profile.get("known_vocabulary", []))
-context_analyzer = ContextAnalyzerAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+context_analyzer = ContextAnalyzerAgent(model="llama-3.3-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 planner_agent = ResponsePlannerAgent(context_analyzer=context_analyzer)
-responder_agent = LLMResponderAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
-sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
-psychiatrist_agent = PsychiatristAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+responder_agent = LLMResponderAgent(model="llama-3.3-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama-3.3-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+psychiatrist_agent = PsychiatristAgent(model="llama-3.3-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 
 # Create a message queue for communication between threads
 message_queue = queue.Queue()
