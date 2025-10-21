@@ -3,7 +3,7 @@ from flask_cors import CORS
 import sys
 import os
 from pathlib import Path
-from groq import Groq
+from openai import OpenAI
 from werkzeug.utils import secure_filename
 import time
 import json
@@ -62,6 +62,21 @@ message_queue = queue.Queue()
 # Add this near the top of the file with other configurations
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Initialize a shared OpenAI-compatible client for Groq
+openai_client = OpenAI(api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+
+@app.route('/healthz')
+def healthz():
+    try:
+        # Basic checks: env var present and key-looking
+        has_key = bool(groq_api_key and len(groq_api_key) > 10)
+        return jsonify({
+            'status': 'ok',
+            'groq_key_present': has_key
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500
 
 def process_chat_message(message, chat_history):
     """Process a single chat message and return the response"""
@@ -135,7 +150,6 @@ def chat():
         session['chat_history'] = chat_history[-12:]  # Keep last 12 messages
         
         # Generate speech for the response
-        client = Groq(api_key=groq_api_key)
         speech_file_path = os.path.join(PROJECT_ROOT, "web", "static", "speech.wav")
         
         # Ensure the speech file directory exists
@@ -150,7 +164,7 @@ def chat():
                     pass
             
             # Generate new speech file
-            speech_response = client.audio.speech.create(
+            speech_response = openai_client.audio.speech.create(
                 model="playai-tts",
                 voice="Jennifer-PlayAI",
                 response_format="wav",
@@ -220,9 +234,6 @@ def transcribe_audio():
         return jsonify({'error': 'No selected file'}), 400
     
     try:
-        # Initialize Groq client
-        client = Groq(api_key=groq_api_key)
-        
         # Create a temporary file with a unique name
         temp_filename = f"temp_audio_{int(time.time())}.webm"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], temp_filename)
@@ -230,7 +241,7 @@ def transcribe_audio():
         
         # Transcribe the audio using Groq
         with open(filepath, "rb") as file:
-            transcription = client.audio.transcriptions.create(
+            transcription = openai_client.audio.transcriptions.create(
                 file=(temp_filename, file.read()),
                 model="whisper-large-v3",
                 language="en",
