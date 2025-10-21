@@ -16,12 +16,12 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 
 profile = load_profile("data/yahya_profile.jsonl")
 
-query_agent = QueryParserAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+query_agent = QueryParserAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 memory_agent = MemoryRetrievalAgent(memory_file="data/core_memories.jsonl")
 context_agent = ContextFilterAgent(known_vocabulary=profile.get("known_vocabulary", []))
 planner_agent = ResponsePlannerAgent()
-responder_agent = LLMResponderAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
-sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
-psychiatrist_agent = PsychiatristAgent(model="llama3-70b-8192", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+responder_agent = LLMResponderAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+sanitizer_agent = SanitizerAgent(known_vocabulary=profile.get("known_vocabulary", []), model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
+psychiatrist_agent = PsychiatristAgent(model="llama-3.1-70b-versatile", api_key=groq_api_key, base_url="https://api.groq.com/openai/v1")
 
 run_chat_session(profile, query_agent, memory_agent, context_agent, planner_agent, responder_agent, sanitizer_agent, psychiatrist_agent, save_profile)

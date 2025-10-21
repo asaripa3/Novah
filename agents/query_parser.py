@@ -5,7 +5,7 @@ import re
 from utils.text_utils import normalize_list
 
 class QueryParserAgent:
-    def __init__(self, model="llama3-70b-8192", api_key=None, base_url=None):
+    def __init__(self, model="llama-3.1-70b-versatile", api_key=None, base_url=None):
         self.model = model
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.tool_instructions = {
